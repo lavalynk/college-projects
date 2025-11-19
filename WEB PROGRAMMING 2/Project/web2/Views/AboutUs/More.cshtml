@@ -1,0 +1,15 @@
+﻿@model web2.Models.User
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+	<h2>More About Us</h2>
+
+	<p>
+		Although @Model.FirstName @Model.LastName is generally a nice person,
+		without coffee, he’s a little cranky in the morning.
+	</p>
+
+	<button class="button-cancel" type="submit" name="btnSubmit" value="close">
+		<i class="fa fa-times"></i> Close
+	</button>
+}

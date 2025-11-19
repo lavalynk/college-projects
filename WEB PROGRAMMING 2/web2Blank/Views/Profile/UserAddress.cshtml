@@ -1,0 +1,102 @@
+﻿@model web2Blank.Models.User
+
+@{
+	ViewBag.Title = "UserAddress";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<p>This is the User Address view.</p>
+
+@if (ViewData["DataSubmitted"] != null && ViewData["DataSubmitted"].ToString() == "true")
+{
+	<div class="some-spacing data-submitted-address">Data submitted successfully.</div>
+}
+
+<div>
+	<h3>@Model.FirstName @Model.LastName</h3>
+</div>
+
+@using (Html.BeginForm())
+{
+	<div class="some-spacing">
+		<button id="btnSubmit1" name="btnSubmit" value="submit">Submit</button>
+		<button id="btnHome1" name="btnSubmit" value="home">Home</button>
+	</div>
+
+
+
+	if (Model.HomeAddress != null)
+	{
+		<h3>Home Address</h3>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.HomeAddress.Address1)</div>
+			<div>@Html.TextBoxFor(m => Model.HomeAddress.Address1) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.HomeAddress.Address2)</div>
+			<div>@Html.TextBoxFor(m => Model.HomeAddress.Address2) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.HomeAddress.City)</div>
+			<div>@Html.TextBoxFor(m => Model.HomeAddress.City) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.HomeAddress.State)</div>
+			<div>@Html.TextBoxFor(m => Model.HomeAddress.State) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.HomeAddress.Zip)</div>
+			<div>@Html.TextBoxFor(m => Model.HomeAddress.Zip) </div>
+		</div>
+	}
+
+	if (Model.Home2Address != null)
+	{
+		<h3>Home 2 Address</h3>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.Home2Address.Address1)</div>
+			<div>@Html.TextBoxFor(m => Model.Home2Address.Address1) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.Home2Address.Address2)</div>
+			<div>@Html.TextBoxFor(m => Model.Home2Address.Address2) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.Home2Address.City)</div>
+			<div>@Html.TextBoxFor(m => Model.Home2Address.City) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.Home2Address.State)</div>
+			<div>@Html.TextBoxFor(m => Model.Home2Address.State) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.Home2Address.Zip)</div>
+			<div>@Html.TextBoxFor(m => Model.Home2Address.Zip) </div>
+		</div>
+	}
+	if (Model.WorkAddress != null)
+	{
+		<h3>Work Address</h3>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.WorkAddress.Address1)</div>
+			<div>@Html.TextBoxFor(m => Model.WorkAddress.Address1) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.WorkAddress.Address2)</div>
+			<div>@Html.TextBoxFor(m => Model.WorkAddress.Address2) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.WorkAddress.City)</div>
+			<div>@Html.TextBoxFor(m => Model.WorkAddress.City) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.WorkAddress.State)</div>
+			<div>@Html.TextBoxFor(m => Model.WorkAddress.State) </div>
+		</div>
+		<div class="some-spacing">
+			<div>@Html.LabelFor(m => Model.WorkAddress.Zip)</div>
+			<div>@Html.TextBoxFor(m => Model.WorkAddress.Zip) </div>
+		</div>
+	}
+}
