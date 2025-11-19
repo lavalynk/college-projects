@@ -1,0 +1,62 @@
+package CHomework4C;
+/**
+* 
+* 
+*
+* @author  Keith Brock
+* @version 1.0
+* @since   2024-09-10
+*/
+
+import java.io.*;
+
+public class CHomework4C {
+    public static void main(String[] args) {
+        String strInput = "";
+
+        // Loop until a valid uppercase letter between 'A' and 'Z' is entered
+        while (strInput.length() != 1 || strInput.charAt(0) < 'A' || strInput.charAt(0) > 'Z') {
+            System.out.print("Enter letter A-Z: ");
+            strInput = ReadStringFromUser();
+
+            // Validate that the input is a single character between 'A' and 'Z'
+            if (strInput.length() != 1 || strInput.charAt(0) < 'A' || strInput.charAt(0) > 'Z') {
+                System.out.println("Invalid input. Please enter a single letter between A and Z.");
+            }
+        }
+
+        // Get the first character from the string input
+        char charInput = strInput.charAt(0);
+
+        // Now use for loops to print the triangle of letters
+        // Outer loop for each row (from 'charInput' to 'A')
+        for (char row = charInput; row >= 'A'; row--) {
+            // Inner loop to print the characters on the current row
+            for (char col = charInput; col >= row; col--) {
+                System.out.print(col);
+            }
+            // Move to the next line after each row
+            System.out.println();
+        }
+    }
+
+    /**
+     * Method ReadStringFromUser
+     * Abstract: Read a string from the user
+     */
+    public static String ReadStringFromUser() {
+        String strValue = ""; // Default invalid value
+
+        try {
+            // Input stream
+            BufferedReader burInput = new BufferedReader(new InputStreamReader(System.in));
+
+            // Read a line from the user
+            strValue = burInput.readLine().toUpperCase(); // Convert input to uppercase
+        } catch (Exception excError) {
+            System.out.println("Error: " + excError.toString());
+        }
+
+        return strValue; // Return the string value
+    }
+}

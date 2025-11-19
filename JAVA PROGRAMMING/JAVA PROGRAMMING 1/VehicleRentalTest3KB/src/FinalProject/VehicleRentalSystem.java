@@ -1,0 +1,235 @@
+package FinalProject;
+
+/**
+ * Name: VehicleRentalSystem
+ * Abstract: This program calculates rental costs for up to three vehicles. It collects user inputs,
+ * validates them, and displays a summary including total rental cost and vehicle details.
+ * 
+ * @author Keith Brock
+ * @since 12/07/2024
+ */
+public class VehicleRentalSystem {
+
+    public static void main(String[] args) {
+        String strCustomerName = "";
+        String strPhoneNumber = "";
+        String strEmailAddress = "";
+        int intRentalDays = 0;
+        int intVehicleCount = 0;
+        double dblTotalCost = 0;
+
+        // Predefined prices for vehicle types
+        int intCar = 50;
+        int intMotorbike = 40;
+        int intTrailer = 30;
+
+        // Gather customer details
+        System.out.println("Welcome to the Vehicle Rental System!");
+        System.out.print("Enter your name: ");
+        strCustomerName = ReadStringFromUser();
+
+        System.out.print("Enter your phone number (xxx-xxx-xxxx or xxxxxxxxxx): ");
+        strPhoneNumber = ReadValidPhoneNumber();
+
+        System.out.print("Enter your email address: ");
+        strEmailAddress = ReadValidEmailAddress();
+
+        System.out.print("Enter the number of rental days: ");
+        intRentalDays = ReadIntegerFromUser();
+
+        System.out.print("Enter the number of vehicles to rent (1-3): ");
+        intVehicleCount = ReadValidVehicleNumber();
+
+        // Collect vehicle details and calculate costs
+        for (int intIndex = 0; intIndex < intVehicleCount; intIndex++) {
+            System.out.println("\nVehicle " + (intIndex + 1) + ":");
+            String strVehicleType = ReadValidVehicleType();
+            int intPricePerDay = GetVehiclePrice(strVehicleType, intCar, intMotorbike, intTrailer);
+
+            double dblVehicleCost = intPricePerDay * intRentalDays;
+            dblTotalCost += dblVehicleCost;
+
+            DisplayVehicleDetails(strVehicleType, intPricePerDay, intRentalDays, dblVehicleCost, intIndex + 1);
+        }
+
+        // Display the total rental cost
+        DisplaySummary(strCustomerName, strPhoneNumber, strEmailAddress, intRentalDays, dblTotalCost);
+    }
+
+    
+    
+    /**
+     * Name: GetVehiclePrice
+     * Abstract: Returns the price per day for the selected vehicle type.
+     * 
+     * @param strVehicleType The type of the vehicle (Car, Motorbike, Trailer).
+     * @param intCar Price per day for a car.
+     * @param intMotorbike Price per day for a motorbike.
+     * @param intTrailer Price per day for a trailer.
+     * @return The price per day for the selected vehicle type.
+     */
+    public static int GetVehiclePrice(String strVehicleType, int intCar, int intMotorbike, int intTrailer) {
+        switch (strVehicleType.toLowerCase()) {
+            case "car":
+                return intCar;
+            case "motorbike":
+                return intMotorbike;
+            case "trailer":
+                return intTrailer;
+            default:
+                throw new IllegalArgumentException("Invalid vehicle type");
+        }
+    }
+
+    
+    
+    /**
+     * Name: DisplayVehicleDetails
+     * Abstract: Displays details for a single vehicle rental.
+     */
+    public static void DisplayVehicleDetails(String strVehicleType, int intPricePerDay, int intRentalDays,
+            double dblVehicleCost, int intVehicleNumber) {
+        System.out.printf("Vehicle %d: %s, Price per day: $%d, Total: $%.2f%n", intVehicleNumber, strVehicleType,
+                intPricePerDay, dblVehicleCost);
+    }
+
+    
+    
+    /**
+     * Name: DisplaySummary
+     * Abstract: Displays a summary of the customer's rental details.
+     */
+    public static void DisplaySummary(String strCustomerName, String strPhoneNumber, String strEmailAddress,
+            int intRentalDays, double dblTotalCost) {
+        System.out.println("\n--- Rental Summary ---");
+        System.out.println("Customer: " + strCustomerName);
+        System.out.println("Phone: " + strPhoneNumber);
+        System.out.println("Email: " + strEmailAddress);
+        System.out.println("Rental Days: " + intRentalDays);
+        System.out.printf("Total Rental Price: $%.2f%n", dblTotalCost);
+    }
+
+    
+    
+    /**
+     * Name: ReadValidPhoneNumber
+     * Abstract: Reads and validates a phone number in the formats xxx-xxx-xxxx or xxxxxxxxxx.
+     */
+    public static String ReadValidPhoneNumber() {
+        String strPhoneNumber = "";
+        boolean blnValid = false;
+
+        while (!blnValid) {
+            strPhoneNumber = ReadStringFromUser();
+            if (strPhoneNumber.matches("(\\d{3}-\\d{3}-\\d{4}|\\d{10})")) {
+                blnValid = true;
+            } else {
+                System.out.print("Invalid phone number! Please try again: ");
+            }
+        }
+        return strPhoneNumber;
+    }
+
+    
+    
+    /**
+     * Name: ReadValidEmailAddress
+     * Abstract: Reads and validates an email address. Must contain '@' and '.' with a valid extension.
+     */
+    public static String ReadValidEmailAddress() {
+        String strEmailAddress = "";
+        boolean blnValid = false;
+
+        while (!blnValid) {
+            strEmailAddress = ReadStringFromUser();
+            if (strEmailAddress.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+                blnValid = true;
+            } else {
+                System.out.print("Invalid email address! Please try again: ");
+            }
+        }
+        return strEmailAddress;
+    }
+    
+    
+
+    /**
+     * Name: ReadValidVehicleNumber
+     * Abstract: Reads and validates the number of vehicles to rent (1-3).
+     */
+    public static int ReadValidVehicleNumber() {
+        int intVehicleCount = 0;
+        boolean blnValid = false;
+
+        while (!blnValid) {
+            intVehicleCount = ReadIntegerFromUser();
+            if (intVehicleCount >= 1 && intVehicleCount <= 3) {
+                blnValid = true;
+            } else {
+                System.out.print("Invalid number of vehicles! Please enter between 1 and 3: ");
+            }
+        }
+        return intVehicleCount;
+    }
+
+    
+    
+    /**
+     * Name: ReadValidVehicleType
+     * Abstract: Reads and validates the vehicle type (Car, Motorbike, Trailer).
+     */
+    public static String ReadValidVehicleType() {
+        String strVehicleType = "";
+        boolean blnValid = false;
+
+        while (!blnValid) {
+            System.out.print("Enter the type of vehicle (Car, Motorbike, Trailer): ");
+            strVehicleType = ReadStringFromUser();
+            if (strVehicleType.equalsIgnoreCase("Car") || strVehicleType.equalsIgnoreCase("Motorbike")
+                    || strVehicleType.equalsIgnoreCase("Trailer")) {
+                blnValid = true;
+            } else {
+                System.out.print("Invalid vehicle type! Please enter Car, Motorbike, or Trailer: ");
+            }
+        }
+        return strVehicleType;
+    }
+
+    
+    
+    /**
+     * Name: ReadStringFromUser
+     * Abstract: Reads a string from the user.
+     */
+    public static String ReadStringFromUser() {
+        String strBuffer = "";
+        try {
+            java.io.BufferedReader burInput = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
+            strBuffer = burInput.readLine();
+        } catch (Exception excError) {
+            System.out.println(excError.toString());
+        }
+        return strBuffer;
+    }
+
+    
+    
+    /**
+     * Name: ReadIntegerFromUser
+     * Abstract: Reads an integer from the user.
+     */
+    public static int ReadIntegerFromUser() {
+        int intValue = 0;
+        boolean blnValid = false;
+
+        while (!blnValid) {
+            try {
+                intValue = Integer.parseInt(ReadStringFromUser());
+                blnValid = true;
+            } catch (Exception excError) {
+                System.out.print("Invalid Input! Please try again.\n");
+            }
+        }
+        return intValue;
+    }
+}

@@ -1,0 +1,42 @@
+package FinalProject;
+
+/**
+ * Name: VehicleTest
+ * Abstract: Tests the Vehicle hierarchy by creating instances of each subclass and displaying their attributes.
+ * 
+ * @author Keith Brock
+ * @since 12/07/2024
+ */
+
+/**
+ * Name: DisplayVehicleDetails
+ * Abstract: Displays the attributes and behaviors of a given vehicle.
+ * 
+ */
+public class VehicleTest {
+    public static void main(String[] args) {
+        CVehicle car = new CCar();
+        CVehicle motorbike = new CMotorbike();
+        CVehicle trailer = new CTrailer();
+
+        System.out.println("Car: ");
+        DisplayVehicleDetails(car);
+
+        System.out.println("\nMotorbike: ");
+        DisplayVehicleDetails(motorbike);
+
+        System.out.println("\nTrailer: ");
+        DisplayVehicleDetails(trailer);
+    }
+
+    /**
+     * Name: DisplayVehicleDetails
+     * Abstract: Displays the attributes and behaviors of a given vehicle.
+     * 
+     */
+    public static void DisplayVehicleDetails(CVehicle vehicle) {
+        System.out.println("Wheels: " + vehicle.getWheels());
+        System.out.println("MPG: " + vehicle.getMPG());
+        System.out.println("How to Drive: " + vehicle.getHowToDrive());
+    }
+}

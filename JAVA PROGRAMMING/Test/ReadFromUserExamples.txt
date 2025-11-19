@@ -1,0 +1,103 @@
+
+	public static char ReadCharacterFromUser( )
+	{			  
+
+		char chrCharacterInput = '4';	
+		
+		try
+		{
+			
+			// Input stream
+			BufferedReader burInput = new BufferedReader( new InputStreamReader( System.in ) ) ;
+
+			// Read a line from the user
+			chrCharacterInput = (char)burInput.read( );
+		}
+		catch( Exception excError )
+		{
+			System.out.println( excError.toString( ) );
+		}
+		
+		// Return integer value
+		return chrCharacterInput;
+	}			
+	
+
+	public static String ReadStringFromUser( )
+	{			  
+
+		String strBuffer = "";	
+		
+		try
+		{
+			
+			// Input stream
+			BufferedReader burInput = new BufferedReader( new InputStreamReader( System.in ) ) ;
+
+			// Read a line from the user
+			strBuffer = burInput.readLine( );
+	
+		}
+		catch( Exception excError )
+		{
+			System.out.println( excError.toString( ) );
+		}
+		
+		// Return integer value
+		return strBuffer;
+	}
+
+	public static int ReadIntegerFromUser( )
+	{			  
+
+		int intValue = 0;
+
+		try
+		{
+			String strBuffer = "";	
+
+			// Input stream
+			BufferedReader burInput = new BufferedReader( new InputStreamReader( System.in ) ) ;
+
+			// Read a line from the user
+			strBuffer = burInput.readLine( );
+			
+			// Convert from string to integer
+			intValue = Integer.parseInt( strBuffer );
+		}
+		catch( Exception excError )
+		{
+			System.out.println( excError.toString( ) );
+		}
+		
+		// Return integer value
+		return intValue;
+	}
+
+	public static float ReadFloatFromUser( )
+	{
+
+		float sngValue = 0;
+
+		try
+		{
+			String strBuffer = "";	
+
+			// Input stream
+			BufferedReader burInput = new BufferedReader( new InputStreamReader( System.in ) ) ;
+
+			// Read a line from the user
+			strBuffer = burInput.readLine( );
+			
+			// Convert from string to float
+			sngValue = Float.parseFloat( strBuffer );
+		}
+		catch( Exception excError )
+		{
+			System.out.println( excError.toString( ) );
+		}
+		
+
+		// Return float value
+		return sngValue;
+	}

@@ -1,0 +1,30 @@
+package Week15FinalProject;
+
+import java.util.Scanner;
+
+public class GetUserInput {
+    /**
+     * Entry point to prompt user for an option.
+     */
+    public static void main(String[] args) {
+        Scanner scInput = new Scanner(System.in);
+        System.out.println("Please select an option:");
+        System.out.println("1 - View Customers");
+        System.out.println("2 - Create Modified Customers File");
+        System.out.print("Enter your choice: ");
+
+        int intChoice = scInput.nextInt();
+        scInput.nextLine(); // Clear buffer
+
+        switch (intChoice) {
+            case 1:
+                ViewCustomers.main(null);
+                break;
+            case 2:
+                ModifyCustomers.main(null);
+                break;
+            default:
+                System.out.println("Invalid choice. Please enter 1 or 2.");
+        }
+    }
+}

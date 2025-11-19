@@ -1,0 +1,165 @@
+package Week15FinalProject;
+
+import org.w3c.dom.*;
+
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import java.io.*;
+import java.util.logging.*;
+
+/**
+ * ModifyCustomers.java
+ * Reads customers.xml, appends new fields to each customer, and saves to customer_modified.xml.
+ * New fields added: phone, contactName, and email.
+ * 
+ * Step5 Enhancement: Includes logging using java.util.logging.
+ * 
+ * Author: Keith Brock
+ * Version: 1.0
+ */
+public class ModifyCustomers {
+    /**
+     * Default constructor for ModifyCustomers.
+     */
+    public ModifyCustomers() {
+        // No initialization required
+    }
+    
+    // Step5 Enhancement - Logger setup
+    private static final Logger logger = Logger.getLogger(ModifyCustomers.class.getName());
+
+    /**
+     * Entry point for modifying the XML and displaying the new file.
+     * @param args Command-line arguments (not used) 
+     */
+    public static void main(String[] args) {
+        setupLogger();
+
+        try {
+            File inputFile = new File("customers.xml");
+
+            // Create the file if it doesn't exist
+            if (!inputFile.exists()) {
+                logger.warning("customers.xml not found. Creating default file...");
+                ViewCustomers.main(null);
+            }
+
+            // Parse existing XML
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(inputFile);
+            doc.getDocumentElement().normalize();
+
+            NodeList customerList = doc.getElementsByTagName("Customer");
+
+            for (int intIndex = 0; intIndex < customerList.getLength(); intIndex++) {
+                Node customerNode = customerList.item(intIndex);
+
+                if (customerNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element customer = (Element) customerNode;
+                    customer.appendChild(createElement(doc, "phone", "555-000-" + (1000 + intIndex)));
+                    customer.appendChild(createElement(doc, "contactName", "Contact Person " + (intIndex + 1)));
+                    customer.appendChild(createElement(doc, "email", "customer" + intIndex + "@keithrocks.com"));
+                }
+            }
+
+            // Write updated document to a new file
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("customer_modified.xml"));
+            transformer.transform(source, result);
+
+            logger.info("customer_modified.xml created successfully.");
+            System.out.println("Modified XML has been saved as customer_modified.xml\n");
+
+            printModifiedXML("customer_modified.xml");
+            
+        // Step5 Enhancement - Exception handling with logging
+        } catch (Exception ex) {
+            logger.severe("Unexpected error: " + ex.getMessage());
+            System.out.println("An error occurred: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Step5 Enhancement - Logger configuration.
+     */
+    private static void setupLogger() {
+        try {
+            LogManager.getLogManager().reset();
+            FileHandler handler = new FileHandler("log_customers.xml");
+            handler.setFormatter(new XMLFormatter());
+            logger.addHandler(handler);
+            logger.setLevel(Level.ALL);
+        } catch (IOException ex) {
+            System.err.println("Logging setup failed: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Creates a new XML element with a given tag name and value.
+     * 
+     * @param doc  the XML document
+     * @param tag  the tag name
+     * @param value the text content
+     * @return the new element
+     */
+    private static Element createElement(Document doc, String tag, String value) {
+        Element element = doc.createElement(tag);
+        element.appendChild(doc.createTextNode(value));
+        return element;
+    }
+
+    /**
+     * Parses and prints the formatted contents of the modified XML file.
+     */
+    private static void printModifiedXML(String strFilePath) {
+        try {
+            File filInput = new File(strFilePath);
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(filInput);
+            doc.getDocumentElement().normalize();
+
+            System.out.println("Root element is : " + doc.getDocumentElement().getNodeName() + "\n");
+
+            NodeList ndlCustomerList = doc.getElementsByTagName("Customer");
+
+            for (int intIndex = 0; intIndex < ndlCustomerList.getLength(); intIndex++) {
+                Element elmCustomer = (Element) ndlCustomerList.item(intIndex);
+
+                String strID = elmCustomer.getAttribute("id");
+                String strName = elmCustomer.getElementsByTagName("name").item(0).getTextContent();
+                String strType = elmCustomer.getElementsByTagName("type").item(0).getTextContent();
+                String strAddress = elmCustomer.getElementsByTagName("address").item(0).getTextContent();
+                String strCity = elmCustomer.getElementsByTagName("city").item(0).getTextContent();
+                String strState = elmCustomer.getElementsByTagName("state").item(0).getTextContent();
+                String strZipcode = elmCustomer.getElementsByTagName("zipcode").item(0).getTextContent();
+                String strPhone = elmCustomer.getElementsByTagName("phone").item(0).getTextContent();
+                String strContactName = elmCustomer.getElementsByTagName("contactName").item(0).getTextContent();
+                String strEmail = elmCustomer.getElementsByTagName("email").item(0).getTextContent();
+
+                System.out.println("Customer ID " + strID);
+                System.out.printf("%-10s %s%n", "Name:", strName);
+                System.out.printf("%-10s %s%n", "Type:", strType);
+                System.out.printf("%-10s %s%n", "Address:", strAddress);
+                System.out.printf("%-10s %s%n", "", strCity + ", " + strState + " " + strZipcode);
+                System.out.printf("%-10s %s%n", "Phone:", strPhone);
+                System.out.printf("%-10s %s%n", "Contact:", strContactName);
+                System.out.printf("%-10s %s%n", "Email:", strEmail);
+                System.out.println();
+            }
+         // Step5 Enhancement - Exception handling with logging
+        } catch (Exception ex) {
+            logger.warning("Error printing modified XML: " + ex.getMessage());
+        }
+    }
+
+
+}

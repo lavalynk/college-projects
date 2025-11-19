@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"Week07NetworkProgramming","l":"GetNetworkNames"},{"p":"Week07NetworkProgramming","l":"GetNetworkWebPage"},{"p":"Week07NetworkProgramming","l":"MyClient"},{"p":"Week07NetworkProgramming","l":"MyServer"}];updateSearchResults();

@@ -1,0 +1,45 @@
+package Week15FinalProject;
+
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import java.io.File;
+
+public class ViewCustomers {
+    /**
+     * Parses customers.xml and prints formatted report to console.
+     * @param args Not used
+     */
+    public static void main(String[] args) {
+        try {
+            File xmlFile = new File("customers.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            dbFactory.setNamespaceAware(true);
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+
+            System.out.println("Root element is : " + doc.getDocumentElement().getNodeName());
+
+            NodeList nodeList = doc.getElementsByTagNameNS("https://www.w3.org/1999/xhtml", "Customer");
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Element eCustomer = (Element) nodeList.item(i);
+                String strId = eCustomer.getAttribute("id");
+                String strName = eCustomer.getElementsByTagNameNS("*", "name").item(0).getTextContent();
+                String strType = eCustomer.getElementsByTagNameNS("*", "type").item(0).getTextContent();
+                String strAddress = eCustomer.getElementsByTagNameNS("*", "address").item(0).getTextContent();
+                String strCity = eCustomer.getElementsByTagNameNS("*", "city").item(0).getTextContent();
+                String strState = eCustomer.getElementsByTagNameNS("*", "state").item(0).getTextContent();
+                String strZip = eCustomer.getElementsByTagNameNS("*", "zipcode").item(0).getTextContent();
+
+                System.out.println("\nCustomer ID " + strId);
+                System.out.println("Name:\t" + strName);
+                System.out.println("Type:\t" + strType);
+                System.out.println("Address: " + strAddress);
+                System.out.println("\t\t" + strCity + ", " + strState + " " + strZip);
+            }
+        } catch (Exception ex) {
+            System.out.println("ERROR: Unable to read XML file - " + ex.getMessage());
+        }
+    }
+}

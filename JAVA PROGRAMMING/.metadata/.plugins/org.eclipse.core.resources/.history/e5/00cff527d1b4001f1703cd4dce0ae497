@@ -1,0 +1,23 @@
+-- Drop the table if it exists
+IF OBJECT_ID('TLocations') IS NOT NULL DROP TABLE TLocations;
+
+-- Create the TLocations table
+CREATE TABLE TLocations (
+    intID          INTEGER         NOT NULL, -- Primary Key
+    strName        VARCHAR(50)     NOT NULL,
+    strAddress     VARCHAR(100)    NOT NULL,
+    strCity        VARCHAR(50)     NOT NULL,
+    strState       VARCHAR(2)      NOT NULL,
+    strZip         VARCHAR(5)      NOT NULL,
+    CONSTRAINT TLocations_PK PRIMARY KEY (intID)
+);
+
+-- Insert sample data into the TLocations table
+INSERT INTO TLocations (intID, strName, strAddress, strCity, strState, strZip)
+VALUES
+    (1, 'Northwest', '10 Colerain', 'Cinti', 'OH', '45241'),
+    (2, 'Downtown', '2010 Vine', 'Cinti', 'OH', '45201'),
+    (3, 'Hamilton', '9010 C Street', 'Hamilton', 'OH', '45013'),
+    (4, 'Loveland', '202 Main St', 'Loveland', 'OH', '45140');
+
+SELECT * FROM TLocations;

@@ -1,0 +1,24 @@
+E:\IT 102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.exe.config
+E:\IT 102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.exe
+E:\IT 102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.pdb
+E:\IT 102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.xml
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.AssemblyReference.cache
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.Form1.resources
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.Resources.resources
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.GenerateResource.cache
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.CoreCompileInputs.cache
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.exe
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.xml
+E:\IT 102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.exe.config
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\bin\Debug\Assignment4_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.AssemblyReference.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.Form1.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.Resources.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.GenerateResource.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.vbproj.CoreCompileInputs.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment4_KB\Assignment4_KB\obj\Debug\Assignment4_KB.pdb

@@ -1,0 +1,3 @@
+﻿  Source.c
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\FinalProject_KB\Source.c(111,35): warning C4013: 'OpenOutputFile' undefined; assuming extern returning int
+  FinalProject_KB.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 1\FinalProject_KB\Debug\FinalProject_KB.exe

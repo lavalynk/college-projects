@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename compilation unit &apos;PizzaSalesKB.package-info.java&apos; to &apos;PizzaSalesKB.java&apos;&#x0D;&#x0A;- Original project: &apos;Week9&apos;&#x0D;&#x0A;- Original element: &apos;PizzaSalesKB.package-info.java&apos;&#x0D;&#x0A;- Renamed element: &apos;PizzaSalesKB.PizzaSalesKB.java&apos;" description="Rename compilation unit &apos;package-info.java&apos;" flags="2" id="org.eclipse.jdt.ui.rename.compilationunit" input="/src&lt;PizzaSalesKB{package-info.java" name="PizzaSalesKB.java" references="false" stamp="1729697999222" version="1.0"/>
+</session>

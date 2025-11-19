@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"Week13XMLLogger","c":"Week13XMLLogger","l":"main(String[])","u":"main(java.lang.String[])"},{"p":"Week13XMLLogger","c":"Week13XMLLogger","l":"Week13XMLLogger()","u":"%3Cinit%3E()"}];updateSearchResults();

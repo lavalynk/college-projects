@@ -1,0 +1,12 @@
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\bin\Debug\Assignment5_KB.exe.config
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\bin\Debug\Assignment5_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\bin\Debug\Assignment5_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\bin\Debug\Assignment5_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.vbproj.AssemblyReference.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.Form1.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.Resources.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.vbproj.GenerateResource.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.vbproj.CoreCompileInputs.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment5_KB\obj\Debug\Assignment5_KB.pdb

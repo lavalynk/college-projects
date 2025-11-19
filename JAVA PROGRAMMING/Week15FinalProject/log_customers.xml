@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2025-04-26T02:52:38.423709600Z</date>
+  <millis>1745635958423</millis>
+  <nanos>709600</nanos>
+  <sequence>0</sequence>
+  <logger>Week15FinalProject.ModifyCustomers</logger>
+  <level>INFO</level>
+  <class>Week15FinalProject.ModifyCustomers</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>customer_modified.xml created successfully.</message>
+</record>
+</log>

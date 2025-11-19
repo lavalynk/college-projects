@@ -1,0 +1,70 @@
+package Week15FinalProject;
+
+import org.w3c.dom.*;
+import org.xml.sax.SAXParseException;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.util.logging.*;
+
+public class ModifyCustomers {
+    private static final Logger logger = Logger.getLogger(ModifyCustomers.class.getName());
+
+    /**
+     * Modifies customers.xml and writes new file with contact fields.
+     * Step5 Enhancement: Added Java logging
+     * @param args Not used
+     */
+    public static void main(String[] args) {
+        File xmlFile = new File("customers.xml");
+        if (!xmlFile.exists()) {
+            System.out.println("ERROR: customers.xml file does not exist.");
+            return;
+        }
+
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            dbFactory.setNamespaceAware(true);
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+
+            NodeList customers = doc.getElementsByTagNameNS("*", "Customer");
+
+            for (int i = 0; i < customers.getLength(); i++) {
+                Element eCustomer = (Element) customers.item(i);
+
+                Element phone = doc.createElement("phone");
+                phone.setTextContent("555-010" + i);
+                eCustomer.appendChild(phone);
+
+                Element contact = doc.createElement("contactName");
+                contact.setTextContent("Contact " + (i + 1));
+                eCustomer.appendChild(contact);
+
+                Element email = doc.createElement("email");
+                email.setTextContent("customer" + (i + 1) + "@example.com");
+                eCustomer.appendChild(email);
+            }
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("customer_modified.xml"));
+            transformer.transform(source, result);
+
+            logger.info("customer_modified.xml created successfully.");
+            System.out.println("Modified XML has been saved as customer_modified.xml");
+
+        } catch (SAXParseException saxEx) {
+            System.out.println("ERROR: customers.xml is malformed or incomplete. Please fix the file and try again.");
+        } catch (Exception ex) {
+            logger.severe("Exception occurred: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+}

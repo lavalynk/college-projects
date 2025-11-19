@@ -1,0 +1,23 @@
+package FinalProject;
+
+/**
+ * Name: Car
+ * Abstract: Subclass of Vehicle. Overrides methods to define car-specific attributes and behaviors.
+ * 
+ * @author Keith Brock
+ * @since 12/07/2024
+ */
+public class CCar extends CVehicle {
+    /**
+     * Default constructor for Car. Initializes wheels and MPG.
+     */
+    public Car() {
+        intWheels = 4;
+        intNumOfMPG = 25;
+    }
+
+    @Override
+    public String getHowToDrive() {
+        return "Use a steering wheel.";
+    }
+}

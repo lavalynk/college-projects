@@ -1,0 +1,28 @@
+﻿  CStack.cpp
+  Source.cpp
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(185,23): warning C4244: 'argument': conversion from 'double' to 'GenericDataType', possible loss of data
+          with
+          [
+              GenericDataType=long
+          ]
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(62): message : see reference to function template instantiation 'void PassStackByValue<long>(CStack<long>)' being compiled
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(216,23): warning C4244: 'argument': conversion from 'double' to 'GenericDataType', possible loss of data
+          with
+          [
+              GenericDataType=long
+          ]
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(78): message : see reference to function template instantiation 'void PassQueueByValue<long>(CQueue<long>)' being compiled
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(185,23): warning C4244: 'argument': conversion from 'double' to 'GenericDataType', possible loss of data
+          with
+          [
+              GenericDataType=char
+          ]
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(144): message : see reference to function template instantiation 'void PassStackByValue<char>(CStack<char>)' being compiled
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(216,23): warning C4244: 'argument': conversion from 'double' to 'GenericDataType', possible loss of data
+          with
+          [
+              GenericDataType=char
+          ]
+C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Source.cpp(158): message : see reference to function template instantiation 'void PassQueueByValue<char>(CQueue<char>)' being compiled
+  Generating Code...
+  Homework11StackQueue.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 2\Homework11StackQueue\Debug\Homework11StackQueue.exe

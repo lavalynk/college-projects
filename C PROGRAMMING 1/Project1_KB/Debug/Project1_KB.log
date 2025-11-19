@@ -1,0 +1,3 @@
+﻿  Source.c
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Project1_KB\Source.c(328,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  Project1_KB.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Project1_KB\Debug\Project1_KB.exe

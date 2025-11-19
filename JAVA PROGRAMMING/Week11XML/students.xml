@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Students>
+    <Student id="S001">
+        <name>Alice</name>
+        <age>21</age>
+        <major>Computer Science</major>
+        <gender>Female</gender>
+    </Student>
+    <Student id="S002">
+        <name>Bob</name>
+        <age>22</age>
+        <major>Engineering</major>
+        <gender>Male</gender>
+    </Student>
+    <Student id="S003">
+        <name>Carol</name>
+        <age>20</age>
+        <major>Biology</major>
+        <gender>Female</gender>
+    </Student>
+    <Student id="S004">
+        <name>David</name>
+        <age>23</age>
+        <major>Business</major>
+        <gender>Male</gender>
+    </Student>
+    <Student id="S005">
+        <name>Eve</name>
+        <age>21</age>
+        <major>Math</major>
+        <gender>Female</gender>
+    </Student>
+</Students>

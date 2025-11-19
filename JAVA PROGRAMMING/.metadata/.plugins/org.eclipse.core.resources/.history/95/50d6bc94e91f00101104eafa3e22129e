@@ -1,0 +1,119 @@
+package Week15FinalProject;
+
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+
+/**
+ * ViewCustomers.java
+ * Parses customers.xml and prints formatted report to console.
+ * If customers.xml does not exist, a default version is generated.
+ * 
+ * Author: Keith Brock
+ * Version: 1.1
+ */
+public class ViewCustomers {
+    /**
+     * Entry point to view formatted customer data from XML.
+     */
+    public static void main(String[] args) {
+        try {
+            File xmlFile = new File("customers.xml");
+            if (true) { // force regeneration every time --- this keeps me from having to manually delete the file
+                createDefaultCustomersXML(xmlFile);
+                System.out.println("Created default customers.xml file.\n");
+            }
+
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            dbFactory.setNamespaceAware(true);
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+
+            System.out.println("Root element is : " + doc.getDocumentElement().getNodeName() + "\n");
+
+            NodeList nodeList = doc.getElementsByTagNameNS("https://www.w3.org/1999/xhtml", "Customer");
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Element eCustomer = (Element) nodeList.item(i);
+                String strId = eCustomer.getAttribute("id");
+                String strName = eCustomer.getElementsByTagNameNS("*", "name").item(0).getTextContent();
+                String strType = eCustomer.getElementsByTagNameNS("*", "type").item(0).getTextContent();
+                String strAddress = eCustomer.getElementsByTagNameNS("*", "address").item(0).getTextContent();
+                String strCity = eCustomer.getElementsByTagNameNS("*", "city").item(0).getTextContent();
+                String strState = eCustomer.getElementsByTagNameNS("*", "state").item(0).getTextContent();
+                String strZip = eCustomer.getElementsByTagNameNS("*", "zipcode").item(0).getTextContent();
+
+                System.out.println("Customer ID " + strId);
+                System.out.printf("%-10s %s%n", "Name:", strName);
+                System.out.printf("%-10s %s%n", "Type:", strType);
+                System.out.printf("%-10s %s%n", "Address:", strAddress);
+                System.out.printf("%-10s %s%n", "", strCity + ", " + strState + " " + strZip);
+                System.out.println();
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR: Unable to read XML file - " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Creates a default customers.xml file with 5 sample records.
+     * @param file The file to be created
+     */
+    private static void createDefaultCustomersXML(File file) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+
+            Element root = doc.createElementNS("https://www.w3.org/1999/xhtml", "Customers");
+            doc.appendChild(root);
+
+            root.appendChild(createCustomer(doc, "1", "ACME Hauling", "commercial", "123 Main Street", "Cincinnati", "OH", "45211"));
+            root.appendChild(createCustomer(doc, "2", "AJ Newtown", "residential", "1 Sunny Way", "Cincinnati", "OH", "45010"));
+            root.appendChild(createCustomer(doc, "3", "Dewey's Pizza", "commercial", "265 Hosea Ave", "Cincinnati", "OH", "45220"));
+            root.appendChild(createCustomer(doc, "4", "Longhorn Steakhouse", "commercial", "9141 Fields Ertel Road", "Cincinnati", "OH", "45249"));
+            root.appendChild(createCustomer(doc, "5", "Paul Intel", "residential", "77 Birch Street", "Columbus", "OH", "43210"));
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(file);
+            transformer.transform(source, result);
+        } catch (Exception ex) {
+            System.out.println("ERROR: Unable to create default XML file - " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Helper to create one customer node.
+     */
+    private static Element createCustomer(Document doc, String id, String name, String type, String address, String city, String state, String zip) {
+        Element customer = doc.createElement("Customer");
+        customer.setAttribute("id", id);
+
+        customer.appendChild(createElement(doc, "name", name));
+        customer.appendChild(createElement(doc, "type", type));
+        customer.appendChild(createElement(doc, "address", address));
+        customer.appendChild(createElement(doc, "city", city));
+        customer.appendChild(createElement(doc, "state", state));
+        customer.appendChild(createElement(doc, "zipcode", zip));
+
+        return customer;
+    }
+
+    /**
+     * Helper to create one tag-value pair.
+     */
+    private static Element createElement(Document doc, String tag, String value) {
+        Element element = doc.createElement(tag);
+        element.appendChild(doc.createTextNode(value));
+        return element;
+    }
+}

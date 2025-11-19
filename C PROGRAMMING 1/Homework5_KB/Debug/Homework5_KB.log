@@ -1,0 +1,9 @@
+﻿  Homework5.c
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(248,46): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(253,46): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(258,46): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(279,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(280,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(285,47): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Homework5.c(264): warning C4716: 'SolvePythagoreanTheorem': must return a value
+  Homework5_KB.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework5_KB\Debug\Homework5_KB.exe

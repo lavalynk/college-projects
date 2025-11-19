@@ -1,0 +1,3 @@
+﻿  Source.c
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework8_KB\Source.c(363,46): warning C4013: 'StringLength' undefined; assuming extern returning int
+  Homework8_KB.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Homework8_KB\Debug\Homework8_KB.exe

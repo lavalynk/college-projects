@@ -1,0 +1,143 @@
+package FinalProject;
+
+//Import for SQL Connection, DriverManager, ResultSet, Statement
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource; // For connecting to SQL Server
+
+/**
+* Abstract: 
+* Displays records from the TLocations table in the dbVehicleRental database.
+* @author Keith Brock
+* @since  12/07/2024
+* @version 1.0
+*/
+public class InputDBSQLTLocations {
+ // Define the Connection
+ private static Connection m_conAdministrator;
+
+ /**
+  * Main method: Connect to the database and display records on the console.
+  */
+ public static void main(String[] args) {
+     try {
+         // Can we connect to the database?
+         if (OpenDatabaseConnectionSQLServer()) {
+             // Yes, load the list
+             LoadListFromDatabase("TLocations", "intID", "strName");
+         } else {
+             // No, warn the user ...
+             System.out.println("Error loading the table.");
+         }
+         System.out.println("Process Complete");
+     } catch (Exception e) {
+         System.out.println("An I/O error occurred: " + e.getMessage());
+     }
+ }
+
+ /** 
+  * Method name: LoadListFromDatabase
+  * This will load the list from the specified table and display it in the required format.
+  */
+ public static boolean LoadListFromDatabase(String strTable, String strPrimaryKeyColumn, String strNameColumn) {
+     // Set flag to false
+     boolean blnResult = false;
+
+     try {
+         String strSelect = "";
+         Statement sqlCommand = null;
+         ResultSet rstTSource = null;
+
+         // Build the SQL string
+         strSelect = "SELECT intID, strName, strAddress, strCity, strZip FROM " + strTable + " ORDER BY intID";
+
+         // Retrieve all the records    
+         sqlCommand = m_conAdministrator.createStatement();
+         rstTSource = sqlCommand.executeQuery(strSelect);
+
+         // Print the header
+         System.out.println("Here are the pickup locations - we will call you with a location confirmation:");
+         System.out.println("-----------------------------------------------------------");
+
+         // Loop through all the records
+         while (rstTSource.next()) {
+             int intID = rstTSource.getInt("intID");
+             String strName = rstTSource.getString("strName");
+             String strAddress = rstTSource.getString("strAddress");
+             String strCity = rstTSource.getString("strCity");
+             String strZip = rstTSource.getString("strZip");
+
+             // Print the formatted output
+             System.out.printf("ID: %d    Name: %-12s Address: %-20s City: %-10s Zip: %s%n",
+                     intID, strName, strAddress, strCity, strZip);
+         }
+
+         // Cleanup
+         rstTSource.close();
+         sqlCommand.close();
+         blnResult = true;
+     } catch (Exception e) {
+         System.out.println("Error loading table.");
+         System.out.println("Error: " + e.getMessage());
+     }
+
+     return blnResult;
+ }
+
+ /**
+  * Method name: OpenDatabaseConnectionSQLServer
+  * Opens a connection to the SQL Server database.
+  * @return True if connection is successful, otherwise false.
+  */
+ public static boolean OpenDatabaseConnectionSQLServer() {
+     boolean blnResult = false;
+
+     try {
+         SQLServerDataSource sdsDataSource = new SQLServerDataSource();
+         sdsDataSource.setServerName("localhost\\SQLExpress"); // Adjust for your setup
+         sdsDataSource.setPortNumber(1433);
+         sdsDataSource.setDatabaseName("dbVehicleRental"); // Updated database name
+
+         // Replace with your credentials
+         sdsDataSource.setUser("sa");
+         sdsDataSource.setPassword("Allison14!");
+
+         // Open a connection to the database
+         m_conAdministrator = sdsDataSource.getConnection();
+         blnResult = true;
+         System.out.println("Connection to database established.");
+     } catch (Exception excError) {
+         System.out.println("Cannot connect - error: " + excError.getMessage());
+         System.out.println("Ensure the SQL Server JDBC Drivers are installed.");
+     }
+
+     return blnResult;
+ }
+
+ /**
+  * Name: CloseDatabaseConnection
+  * Abstract: Close the connection to the database.
+  * @return True if connection is closed successfully, otherwise false.
+  */
+ public static boolean CloseDatabaseConnection() {
+     boolean blnResult = false;
+
+     try {
+         // Is there a connection object?
+         if (m_conAdministrator != null) {
+             // Yes, close the connection if not closed already
+             if (!m_conAdministrator.isClosed()) {
+                 m_conAdministrator.close();
+                 System.out.println("Database connection closed.");
+                 m_conAdministrator = null; // Prevent JVM from crashing
+             }
+         }
+         blnResult = true;
+     } catch (Exception excError) {
+         System.out.println("Error closing the database connection: " + excError.getMessage());
+     }
+
+     return blnResult;
+ }
+}

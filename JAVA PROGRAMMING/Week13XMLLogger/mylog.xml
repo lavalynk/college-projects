@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2025-04-19T02:40:24.774847600Z</date>
+  <millis>1745030424774</millis>
+  <nanos>847600</nanos>
+  <sequence>0</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>INFO</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Starting exception simulation...</message>
+</record>
+<record>
+  <date>2025-04-19T02:40:24.779831200Z</date>
+  <millis>1745030424779</millis>
+  <nanos>831200</nanos>
+  <sequence>1</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>SEVERE</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>simulateArithmeticException</method>
+  <thread>1</thread>
+  <message>SEVERE: Division by zero error - java.lang.ArithmeticException: / by zero</message>
+</record>
+<record>
+  <date>2025-04-19T02:40:24.779831200Z</date>
+  <millis>1745030424779</millis>
+  <nanos>831200</nanos>
+  <sequence>2</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>WARNING</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>simulateNullPointerException</method>
+  <thread>1</thread>
+  <message>WARNING: Attempted to access a null object - java.lang.NullPointerException: Cannot invoke "String.length()" because "null" is null</message>
+</record>
+<record>
+  <date>2025-04-19T02:40:24.780334400Z</date>
+  <millis>1745030424780</millis>
+  <nanos>334400</nanos>
+  <sequence>3</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>WARNING</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>simulateArrayIndexException</method>
+  <thread>1</thread>
+  <message>WARNING: Array index out of range - java.lang.ArrayIndexOutOfBoundsException: Index 10 out of bounds for length 3</message>
+</record>
+<record>
+  <date>2025-04-19T02:40:24.780334400Z</date>
+  <millis>1745030424780</millis>
+  <nanos>334400</nanos>
+  <sequence>4</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>INFO</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>simulateNumberFormatException</method>
+  <thread>1</thread>
+  <message>INFO: Number format issue occurred - java.lang.NumberFormatException: For input string: "abc123"</message>
+</record>
+<record>
+  <date>2025-04-19T02:40:24.780334400Z</date>
+  <millis>1745030424780</millis>
+  <nanos>334400</nanos>
+  <sequence>5</sequence>
+  <logger>Week13XMLLogger.Week13XMLLogger</logger>
+  <level>INFO</level>
+  <class>Week13XMLLogger.Week13XMLLogger</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Finished logging all exceptions.</message>
+</record>
+</log>

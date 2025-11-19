@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Customers xmlns="https://www.w3.org/1999/xhtml">
+    <Customer id="1">
+        <name>ACME Hauling</name>
+        <type>commercial</type>
+        <address>123 Main Street</address>
+        <city>Cincinnati</city>
+        <state>OH</state>
+        <zipcode>45211</zipcode>
+    </Customer>
+    <Customer id="2">
+        <name>AJ Newtown</name>
+        <type>residential</type>
+        <address>1 Sunny Way</address>
+        <city>Cincinnati</city>
+        <state>OH</state>
+        <zipcode>45010</zipcode>
+    </Customer>
+    <Customer id="3">
+        <name>Dewey's Pizza</name>
+        <type>commercial</type>
+        <address>265 Hosea Ave</address>
+        <city>Cincinnati</city>
+        <state>OH</state>
+        <zipcode>45220</zipcode>
+    </Customer>
+    <Customer id="4">
+        <name>Longhorn Steakhouse</name>
+        <type>commercial</type>
+        <address>9141 Fields Ertel Road</address>
+        <city>Cincinnati</city>
+        <state>OH</state>
+        <zipcode>45249</zipcode>
+    </Customer>
+    <Customer id="5">
+        <name>Paul Intel</name>
+        <type>residential</type>
+        <address>77 Durango Street</address>
+        <city>Cleveland</city>
+        <state>OH</state>
+        <zipcode>43210</zipcode>
+    </Customer>
+</Customers>

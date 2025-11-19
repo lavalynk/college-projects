@@ -1,0 +1,243 @@
+package FinalProject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.regex.Pattern;
+
+/**
+ * Name: VehicleRentalSystem
+ * Abstract: This program calculates rental costs for up to three vehicles. It collects user inputs,
+ * validates them, and displays a summary including total rental cost and vehicle details.
+ * 
+ * @author Keith Brock
+ * @since 12/07/2024
+ */
+public class VehicleRentalSystem {
+
+    /**
+     * Name: main
+     * Abstract: This is where the program starts. It gathers customer inputs, validates them,
+     * calculates rental costs, and displays the output.
+     * 
+     * @param args Command-line arguments (not used in this program).
+     */
+    public static void main(String[] args) {
+        String strCustomerName = "";
+        String strPhoneNumber = "";
+        String strEmailAddress = "";
+        String strPickupDate = "";
+        int intRentalDays = 0;
+        int intVehicleCount = 0;
+        double dblTotalCost = 0;
+
+        // Gather customer details
+        System.out.println("Welcome to the Vehicle Rental System!");
+        System.out.print("Enter your name: ");
+        strCustomerName = ReadStringFromUser();
+
+        System.out.print("Enter your phone number (XXX-XXX-XXXX or (XXX) XXX-XXXX): ");
+        strPhoneNumber = ReadStringFromUser(VehicleRentalSystem::IsValidPhoneNumber);
+
+        System.out.print("Enter your email address: ");
+        strEmailAddress = ReadStringFromUser(VehicleRentalSystem::IsValidEmailAddress);
+
+        System.out.print("Enter the vehicle pickup date (YYYY-MM-DD): ");
+        strPickupDate = ReadStringFromUser();
+
+        System.out.print("Enter the number of rental days: ");
+        intRentalDays = ReadIntegerFromUser();
+
+        System.out.print("Enter the number of vehicles to rent (1-3): ");
+        intVehicleCount = ReadIntegerFromUser(VehicleRentalSystem::IsValidVehicleNumber);
+
+        // Collect vehicle details and calculate costs
+        for (int intIndex = 0; intIndex < intVehicleCount; intIndex++) {
+            System.out.println("\nVehicle " + (intIndex + 1) + ":");
+            System.out.print("Enter the type of vehicle (Car, Motorbike, Trailer): ");
+            String strVehicleType = ReadStringFromUser();
+
+            System.out.print("Enter the price per day for this vehicle: ");
+            float dblPricePerDay = ReadFloatFromUser();
+
+            double dblVehicleCost = dblPricePerDay * intRentalDays;
+            dblTotalCost += dblVehicleCost;
+
+            DisplayVehicleDetails(strVehicleType, dblPricePerDay, intRentalDays, dblVehicleCost, intIndex + 1);
+        }
+
+        // Display the total rental cost
+        DisplaySummary(strCustomerName, strPhoneNumber, strEmailAddress, strPickupDate, intRentalDays, dblTotalCost);
+    }
+
+    /**
+     * Name: DisplayVehicleDetails
+     * Abstract: Displays details for a single vehicle rental.
+     * 
+     * @param strVehicleType The type of the vehicle.
+     * @param dblPricePerDay The price per day for the vehicle.
+     * @param intRentalDays The number of rental days.
+     * @param dblVehicleCost The total cost for this vehicle.
+     * @param intVehicleNumber The vehicle number in the sequence.
+     */
+    public static void DisplayVehicleDetails(String strVehicleType, float dblPricePerDay, int intRentalDays,
+            double dblVehicleCost, int intVehicleNumber) {
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+        System.out.printf("Vehicle %d: %s, Price per day: %s, Total: %s%n", intVehicleNumber, strVehicleType,
+                currencyFormat.format(dblPricePerDay), currencyFormat.format(dblVehicleCost));
+    }
+
+    /**
+     * Name: DisplaySummary
+     * Abstract: Displays a summary of the customer's rental details.
+     * 
+     * @param strCustomerName The customer's name.
+     * @param strPhoneNumber The customer's phone number.
+     * @param strEmailAddress The customer's email address.
+     * @param strPickupDate The pickup date for the rental.
+     * @param intRentalDays The number of rental days.
+     * @param dblTotalCost The total cost of the rental.
+     */
+    public static void DisplaySummary(String strCustomerName, String strPhoneNumber, String strEmailAddress,
+            String strPickupDate, int intRentalDays, double dblTotalCost) {
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+        System.out.println("\n--- Rental Summary ---");
+        System.out.println("Customer: " + strCustomerName);
+        System.out.println("Phone: " + strPhoneNumber);
+        System.out.println("Email: " + strEmailAddress);
+        System.out.println("Pickup Date: " + strPickupDate);
+        System.out.println("Rental Days: " + intRentalDays);
+        System.out.println("Total Rental Price: " + currencyFormat.format(dblTotalCost));
+    }
+
+    /**
+     * Name: ReadStringFromUser
+     * Abstract: Reads a string from the user.
+     * 
+     * @return The string entered by the user.
+     */
+    public static String ReadStringFromUser() {
+        String strInput = "";
+        try {
+            BufferedReader burInput = new BufferedReader(new InputStreamReader(System.in));
+            strInput = burInput.readLine().trim();
+        } catch (Exception excError) {
+            System.out.println("Invalid input! Please try again.");
+            strInput = ReadStringFromUser();
+        }
+        return strInput;
+    }
+
+    /**
+     * Name: ReadStringFromUser
+     * Abstract: Reads a string from the user and validates it using a provided function.
+     * 
+     * @param fncValidator The validation function to check the input.
+     * @return The validated string input.
+     */
+    public static String ReadStringFromUser(ValidationFunction<String> fncValidator) {
+        String strInput = "";
+        do {
+            strInput = ReadStringFromUser();
+            if (!fncValidator.validate(strInput)) {
+                System.out.println("Invalid input! Please try again.");
+            }
+        } while (!fncValidator.validate(strInput));
+        return strInput;
+    }
+
+    /**
+     * Name: ReadIntegerFromUser
+     * Abstract: Reads an integer from the user.
+     * 
+     * @return The integer value entered by the user.
+     */
+    public static int ReadIntegerFromUser() {
+        int intValue = 0;
+        try {
+            intValue = Integer.parseInt(ReadStringFromUser());
+        } catch (Exception excError) {
+            System.out.println("Invalid input! Please enter an integer.");
+            intValue = ReadIntegerFromUser();
+        }
+        return intValue;
+    }
+
+    /**
+     * Name: ReadIntegerFromUser
+     * Abstract: Reads an integer from the user and validates it using a provided function.
+     * 
+     * @param fncValidator The validation function to check the input.
+     * @return The validated integer input.
+     */
+    public static int ReadIntegerFromUser(ValidationFunction<Integer> fncValidator) {
+        int intInput;
+        do {
+            intInput = ReadIntegerFromUser();
+            if (!fncValidator.validate(intInput)) {
+                System.out.println("Invalid input! Please try again.");
+            }
+        } while (!fncValidator.validate(intInput));
+        return intInput;
+    }
+
+    /**
+     * Name: ReadFloatFromUser
+     * Abstract: Reads a float from the user.
+     * 
+     * @return The float value entered by the user.
+     */
+    public static float ReadFloatFromUser() {
+        float dblValue = 0;
+        try {
+            dblValue = Float.parseFloat(ReadStringFromUser());
+        } catch (Exception excError) {
+            System.out.println("Invalid input! Please enter a decimal value.");
+            dblValue = ReadFloatFromUser();
+        }
+        return dblValue;
+    }
+
+    /**
+     * Name: IsValidPhoneNumber
+     * Abstract: Validates a phone number in the format XXX-XXX-XXXX or (XXX) XXX-XXXX.
+     * 
+     * @param strPhoneNumber The phone number to validate.
+     * @return True if valid; otherwise, false.
+     */
+    public static boolean IsValidPhoneNumber(String strPhoneNumber) {
+        return Pattern.matches("^(\\(\\d{3}\\) \\d{3}-\\d{4}|\\d{3}-\\d{3}-\\d{4})$", strPhoneNumber);
+    }
+
+    /**
+     * Name: IsValidEmailAddress
+     * Abstract: Validates an email address.
+     * 
+     * @param strEmailAddress The email address to validate.
+     * @return True if valid; otherwise, false.
+     */
+    public static boolean IsValidEmailAddress(String strEmailAddress) {
+        return Pattern.matches("^[a-zA-Z][\\w.-]*@[a-zA-Z]+\\.[a-zA-Z]{2,6}$", strEmailAddress);
+    }
+
+    /**
+     * Name: IsValidVehicleNumber
+     * Abstract: Validates the number of vehicles to rent (1 to 3).
+     * 
+     * @param intVehicleCount The vehicle count to validate.
+     * @return True if valid; otherwise, false.
+     */
+    public static boolean IsValidVehicleNumber(int intVehicleCount) {
+        return intVehicleCount >= 1 && intVehicleCount <= 3;
+    }
+
+    /**
+     * Name: ValidationFunction
+     * Abstract: Functional interface for validation functions.
+     */
+    @FunctionalInterface
+    interface ValidationFunction<T> {
+        boolean validate(T input);
+    }
+}

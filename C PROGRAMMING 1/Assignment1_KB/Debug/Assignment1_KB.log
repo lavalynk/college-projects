@@ -1,0 +1,4 @@
+﻿  Main.c
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Assignment1_KB\Main.c(100,20): warning C4305: '-=': truncation from 'double' to 'float'
+C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Assignment1_KB\Main.c(101,20): warning C4305: '+=': truncation from 'double' to 'float'
+  Assignment1_KB.vcxproj -> C:\Users\kalmb\OneDrive\C PROGRAMMING 1\Assignment1_KB\Debug\Assignment1_KB.exe

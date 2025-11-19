@@ -1,0 +1,15 @@
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\bin\Debug\Assignment12_KB.exe.config
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\bin\Debug\Assignment12_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\bin\Debug\Assignment12_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\bin\Debug\Assignment12_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.vbproj.AssemblyReference.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.frmPassengers.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.Resources.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.vbproj.GenerateResource.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.vbproj.CoreCompileInputs.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.frmMain.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.frmAttendant.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment12_KB\obj\Debug\Assignment12_KB.frmPilot.resources

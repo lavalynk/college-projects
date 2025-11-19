@@ -1,0 +1,16 @@
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\bin\Debug\Assignment13_KB.exe.config
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\bin\Debug\Assignment13_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\bin\Debug\Assignment13_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\bin\Debug\Assignment13_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.vbproj.AssemblyReference.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.frmAdd.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.frmMain.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.Resources.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.vbproj.GenerateResource.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.vbproj.CoreCompileInputs.cache
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.exe
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.xml
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.pdb
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.frmShow.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.frmUpdate.resources
+C:\Users\kalmb\OneDrive\IT-102\Assignment13_KB\obj\Debug\Assignment13_KB.frmDelete.resources
