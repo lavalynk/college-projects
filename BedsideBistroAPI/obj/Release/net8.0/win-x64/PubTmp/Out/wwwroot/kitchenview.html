@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Kitchen Dashboard</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+    --radius:18px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    color:var(--text); line-height:1.45;
+    background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+  }
+  a{color:inherit;text-decoration:none}
+  .container{width:min(1280px,94vw);margin:0 auto}
+  .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+  .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(420px,50vw);box-shadow:var(--shadow)}
+  .search input{border:0;outline:0;width:100%;font:inherit;background:transparent}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Layout */
+  .layout{display:grid;grid-template-columns:0.95fr 1.05fr;gap:18px;margin:10px 0 24px;}
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr} }
+
+  /* Panels */
+  .panel,.detail{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+
+  /* Left list */
+  .list{display:grid;gap:12px}
+  .cell{
+    border:2px solid var(--outline);border-radius:16px;background:#fff;padding:10px;display:grid;gap:8px;cursor:pointer;
+    transition:border-color .2s, box-shadow .2s, background .2s;
+  }
+  .cell:hover{box-shadow:0 10px 22px rgba(0,0,0,.08)}
+  .cell.selected{outline:3px solid #8fd6b9}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .name{font-weight:800}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size:.95rem}
+  .pill{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+  .eta{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px solid var(--outline);background:#eaf2ef}
+  .eta.ok{border-color:#cfe5db;color:var(--ok)}
+  .eta.warn{border-color:#f0d9b3;color:var(--warn);background:#fff7e8}
+  .eta.late{border-color:#f0c1c1;color:var(--alert);background:#ffe9e9}
+  .badges{display:flex;gap:.4rem;flex-wrap:wrap}
+  .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd}
+  .chip.allergen{border-style:solid;border-color:#f0c1c1;background:#ffe9e9;color:#8b2323}
+
+  /* Stepper */
+  .steps{position:relative;padding:8px 4px 0}
+  .steps::before{content:"";position:absolute;left:18px;right:18px;top:14px;height:4px;background:#e8efe9;border-radius:999px;z-index:0}
+  .steps .track{position:absolute;left:18px;top:14px;height:4px;background:linear-gradient(90deg,var(--brand),var(--brand-600));border-radius:999px;z-index:0;width:0;transition:width .4s ease}
+  .steps .row{position:relative;display:flex;justify-content:space-between;z-index:1}
+  .step{display:grid;justify-items:center;gap:6px;min-width:0}
+  .dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid #cfe5db;color:#2f7d5f;font-size:.75rem;font-weight:800}
+  .done .dot{background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;border-color:transparent}
+  .active .dot{border-color:#2f7d5f}
+  .label{font-size:.76rem;color:#5f6a66;white-space:nowrap}
+
+  /* Right detail */
+  .cardish{border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  .items{display:grid;gap:8px}
+  .muted{color:var(--muted)}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+  .btn.danger{border-color:#e7b0b0;color:#8b2323}
+
+  /* Toolbar + Toast */
+  .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:8px 0 12px}
+  .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+  .success{border-color:#bde2d2;color:#205b44}
+  .dangerGhost{border-color:#e7b0b0;color:#8b2323}
+  .toast{position:fixed;right:16px;bottom:16px;background:#162d25;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);transition:all .25s ease;z-index:80}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  /* Modal (Reject) */
+  #rejectToggle{display:none}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  #rejectToggle:checked ~ .modal-backdrop{display:flex}
+  .modal{width:min(720px,96vw);background:#fff;border:1px solid var(--outline);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);overflow:hidden}
+  .modal .pad{padding:14px 16px}
+  .modal .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .select,.input,.textarea{border:1px solid var(--outline);border-radius:12px;padding:8px 10px;font:inherit;background:#fff}
+  .textarea{width:100%;min-height:90px;resize:vertical}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#content">Skip to content</a>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Kitchen</span>
+    </div>
+    <label class="search" aria-label="Search kitchen tickets">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" placeholder="Search by room, MRN, patient, item…" />
+    </label>
+    <button class="profile" aria-label="Kitchen profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <div class="toolbar">
+    <span class="muted">SLA: Prep ≤ 15m · Delivery ≤ 10m after runner pickup</span>
+    <span style="flex:1"></span>
+    <button class="ghost success" type="button" id="bulkAccept">Bulk accept</button>
+    <label for="rejectToggle" class="ghost dangerGhost" role="button">Bulk reject…</label>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: Tickets list -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Open tickets</h2>
+          <div class="muted" id="countHint">0</div>
+        </div>
+        <div id="ticketList" class="list" role="list"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Detail / Summary -->
+    <aside class="detail" id="detail">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Order summary</h2>
+          <span class="muted mono" id="selId">—</span>
+        </div>
+
+        <div class="cardish" id="summaryCard">
+          <div class="kv"><strong id="pTitle">—</strong><span class="pill" id="pRoom">Room —</span></div>
+          <div class="badges" id="dietBadges" style="margin-top:6px"></div>
+          <div class="badges" id="allerBadges" style="margin-top:6px"></div>
+
+          <div class="steps" style="margin-top:10px">
+            <div class="track" id="track"></div>
+            <div class="row" id="stepsRow"></div>
+          </div>
+
+          <div class="items" id="items" style="margin-top:10px"></div>
+
+          <div class="cardish" style="margin-top:10px">
+            <strong>Nutritional snapshot</strong>
+            <div class="badges" id="nutrition" style="margin-top:6px"></div>
+          </div>
+
+          <div class="kv" style="margin-top:10px"><span class="muted">Notes</span><span id="noteLine" class="mono">—</span></div>
+        </div>
+
+        <div class="cta" id="actions" style="margin-top:10px"></div>
+
+        <div class="cardish" style="margin-top:10px">
+          <div class="kv"><strong>Label / Sticker</strong><button class="btn" id="printBtn" type="button">Print label</button></div>
+          <div class="muted">Patient • room • order code • allergens</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Reject Modal -->
+<input type="checkbox" id="rejectToggle" />
+<div class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rejTitle">
+    <div class="pad">
+      <div class="head">
+        <strong id="rejTitle">Reject order</strong>
+        <label for="rejectToggle" class="ghost" role="button" aria-label="Close">Close</label>
+      </div>
+      <p class="muted">Reason will be shared with the patient + nurse. Substitution bundles are optional.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label>
+          <strong>Reason</strong>
+          <select id="rejReason" class="select" required>
+            <option selected value="Out of stock">Out of stock</option>
+            <option value="Not permitted by diet order">Not permitted by diet order</option>
+            <option value="Kitchen temporarily closed">Kitchen temporarily closed</option>
+            <option value="Other">Other (see note)</option>
+          </select>
+        </label>
+        <label>
+          <strong>Substitution bundle</strong>
+          <select id="rejBundle" class="select">
+            <option value="">None</option>
+            <option value="Wheat→White Bread">OOS wheat bread → white bread</option>
+            <option value="Romaine→Mixed Greens">OOS romaine → mixed greens</option>
+            <option value="Tahini→Hummus">OOS tahini → hummus</option>
+          </select>
+        </label>
+      </div>
+
+      <label style="display:block;margin-top:8px">
+        <strong>Note</strong>
+        <textarea id="rejNote" class="textarea" placeholder="Short explanation…"></textarea>
+      </label>
+
+      <div class="cta" style="margin-top:10px;justify-content:flex-end">
+        <label for="rejectToggle" class="btn">Cancel</label>
+        <button id="rejSubmit" class="btn danger" type="button">Reject order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
+
+<script>
+  /* ---------- Sample data (kitchen-visible) ---------- */
+  const state = {
+    tickets: [
+      {
+        id:"BB-742", name:"Wooldridge, Josie", mrn:"004219", room:"4B-213",
+        status:"received", approved:true,
+        diet:["Low Na"], allergens:["Peanut"],
+        items:[{name:"Grilled Chicken Salad", mods:["No croutons","Extra tomatoes","Dressing on side"], kcal:350, protein:28, sodium:380, maketime:9}],
+        count: 2,
+        note:"Dressing on the side"
+      },
+      {
+        id:"BB-744", name:"Singh, Maya", mrn:"003108", room:"3A-118",
+        status:"received", approved:true,
+        diet:["Whole Grain"], allergens:["Wheat"],
+        items:[{name:"Turkey & Avocado Sandwich", mods:["No mayo","Cut in halves"], kcal:420, protein:24, sodium:520, maketime:7},{name:"Side Salad", mods:["Light dressing"], kcal:80, protein:2, sodium:120, maketime:3}],
+        count: 2,
+        note:""
+      },
+      {
+        id:"BB-746", name:"Ramirez, Kai", mrn:"004301", room:"4B-214",
+        status:"preparing", approved:true, start: Date.now()-2*60*1000,
+        diet:["Vegan","Renal-friendly"], allergens:["Sesame"],
+        items:[{name:"Roasted Veggie Bowl", mods:["Extra tahini"], kcal:380, protein:13, sodium:410, maketime:8}],
+        count: 1,
+        note:"Extra tahini"
+      },
+      {
+        id:"BB-750", name:"Nguyen, Linh", mrn:"002808", room:"4B-210",
+        status:"waiting", approved:true,
+        diet:["Vegetarian"], allergens:["Milk"],
+        items:[{name:"Tomato Basil Soup", mods:["No croutons"], kcal:210, protein:6, sodium:420, maketime:4}],
+        count: 1,
+        note:""
+      }
+    ]
+  };
+
+  /* ---------- Helpers ---------- */
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const toast = (t)=>{ const el=$("#toast"); el.textContent=t; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1400); };
+  const stepOrder = ["received","preparing","waiting","onway","delivered"]; // kitchen perspective
+  const stepLabels = ["Order received","Preparing order","Waiting for runner","On the way","Delivered"];
+  const statusIndex = s => Math.max(0, stepOrder.indexOf(s));
+
+  function etaClass(mins){ if(mins >= 15) return "late"; if(mins >= 12) return "warn"; return "ok"; }
+
+  function totalMakeTime(items){ return (items||[]).reduce((a,x)=>a+(x.maketime||0),0); }
+
+  /* ---------- Left list rendering ---------- */
+  const listEl = $("#ticketList");
+  let selectedId = null;
+
+  function sortedTickets(){
+    const open = state.tickets.filter(t=>t.status!=="delivered");
+    const done = state.tickets.filter(t=>t.status==="delivered");
+    // simple sort: received/prep/waiting first, delivered last
+    return [...open, ...done];
+  }
+
+  function calcETA(ticket){
+    if(ticket.status === "received"){
+      const eta = Math.max(5, totalMakeTime(ticket.items));
+      return {text:`ETA ~ ${eta}m`, cls:"ok"};
+    }
+    if(ticket.status === "preparing"){
+      const start = ticket.start || Date.now();
+      const mins = Math.floor((Date.now()-start)/60000);
+      return {text:`Prep ${mins}/15m`, cls:etaClass(mins)};
+    }
+    if(ticket.status === "waiting") return {text:"Ready — runner needed", cls:"warn"};
+    if(ticket.status === "onway") return {text:"On the way", cls:"ok"};
+    if(ticket.status === "delivered") return {text:"Delivered", cls:"ok"};
+    return {text:"—", cls:"ok"};
+  }
+
+  function buildCell(t){
+    const cell = document.createElement("article");
+    cell.className = "cell";
+    cell.setAttribute("role","listitem");
+    cell.dataset.id = t.id;
+    const eta = calcETA(t);
+
+    const summary = (t.items||[]).slice(0,2).map(i=>i.name).join(", ");
+    cell.innerHTML = `
+      <div class="meta">
+        <span class="name">${t.name}</span>
+        <span class="mono">MRN ${t.mrn}</span>
+        <span class="pill">Room ${t.room}</span>
+        <span class="eta ${eta.cls}">${eta.text}</span>
+      </div>
+      <div class="muted mono">${t.count} item${t.count!==1?"s":""} — ${summary}</div>
+      <div class="badges">
+        ${(t.diet||[]).map(d=>`<span class="chip">${d}</span>`).join("")}
+        ${(t.allergens||[]).map(a=>`<span class="chip allergen">${a}</span>`).join("")}
+      </div>
+      <div class="steps" aria-label="Order status">
+        <div class="track"></div>
+        <div class="row">
+          ${stepOrder.map((s,i)=>{
+            const idx = statusIndex(t.status);
+            const cls = i < idx ? "step done" : (i===idx ? "step active" : "step");
+            return `
+              <div class="${cls}">
+                <div class="dot">${i+1}</div>
+                <div class="label">${stepLabels[i]}</div>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+
+    // fill track width
+    const pct = (statusIndex(t.status)/(stepOrder.length-1))*100;
+    cell.querySelector(".track").style.width = `calc(${pct}% - 18px)`;
+
+    cell.addEventListener("click", ()=> selectTicket(t.id));
+    return cell;
+  }
+
+  function renderList(){
+    listEl.innerHTML = "";
+    const tickets = sortedTickets();
+    $("#countHint").textContent = `${tickets.filter(t=>t.status!=="delivered").length} active`;
+    tickets.forEach(t=> listEl.appendChild(buildCell(t)));
+    if(selectedId){
+      const still = state.tickets.find(x=>x.id===selectedId);
+      if(still) highlightCell(selectedId); else selectTicket(tickets[0]?.id);
+    } else if(tickets.length){ selectTicket(tickets[0].id); }
+  }
+
+  function highlightCell(id){
+    $$(".cell").forEach(c=> c.classList.toggle("selected", c.dataset.id===id));
+  }
+
+  /* ---------- Detail rendering ---------- */
+  function selectTicket(id){
+    selectedId = id; highlightCell(id);
+    const t = state.tickets.find(x=>x.id===id);
+    if(!t){ clearDetail(); return; }
+    $("#selId").textContent = t.id;
+    $("#pTitle").textContent = `${t.name} • MRN ${t.mrn}`;
+    $("#pRoom").textContent = `Room ${t.room}`;
+
+    $("#dietBadges").innerHTML = (t.diet||[]).map(d=>`<span class=\"chip\">${d}</span>`).join("");
+    $("#allerBadges").innerHTML = (t.allergens||[]).map(a=>`<span class=\"chip allergen\">${a}</span>`).join("") || `<span class=\"muted\">No allergies recorded</span>`;
+
+    // items
+    const itemsEl = $("#items"); itemsEl.innerHTML = "";
+    (t.items||[]).forEach(it=>{
+      const el = document.createElement("div");
+      el.className = "cardish";
+      const allerg = (it.allergens||[]).map(a=>`<span class=\"chip allergen\">${a}</span>`).join(" ");
+      el.innerHTML = `
+        <div class="kv"><strong>${it.name}</strong><span class="mono">${it.maketime?`${it.maketime}m`:""}</span></div>
+        ${allerg ? `<div class=\"badges\">${allerg}</div>` : ``}
+        <div class="muted">${(it.mods||[]).join(" · ") || "No modifications"}</div>`;
+      itemsEl.appendChild(el);
+    });
+
+    // nutrition snapshot (sum)
+    const totals = (t.items||[]).reduce((a,x)=>({kcal:a.kcal+(x.kcal||0), protein:a.protein+(x.protein||0), sodium:a.sodium+(x.sodium||0)}),{kcal:0,protein:0,sodium:0});
+    $("#nutrition").innerHTML = `
+      <span class="chip mono">~${totals.kcal} kcal</span>
+      <span class="chip mono">${totals.protein}g protein</span>
+      <span class="chip mono">&lt; ${totals.sodium}mg sodium</span>`;
+
+    $("#noteLine").textContent = t.note || "—";
+
+    // stepper
+    renderDetailStepper(t);
+
+    // actions (kitchen perms)
+    const actions = $("#actions");
+    actions.innerHTML = "";
+    if(t.status === "received"){
+      const accept = document.createElement("button"); accept.className = "btn primary"; accept.textContent = "Accept"; accept.addEventListener("click", ()=>acceptTicket(t.id));
+      const reject = document.createElement("label"); reject.className = "btn danger"; reject.setAttribute("for","rejectToggle"); reject.textContent = "Reject…"; reject.addEventListener("click", ()=> setupReject(t.id));
+      actions.appendChild(accept); actions.appendChild(reject);
+    } else if(t.status === "preparing"){
+      const timer = document.createElement("span"); timer.className = "mono"; timer.id = "prepTimer"; actions.appendChild(timer);
+      const toWait = document.createElement("button"); toWait.className = "btn"; toWait.textContent = "Move to Waiting for runner"; toWait.addEventListener("click", ()=> moveToWaiting(t.id)); actions.appendChild(toWait);
+      startTimer(t);
+    } else if(t.status === "waiting"){
+      const info = document.createElement("div"); info.className = "muted"; info.textContent = "Ready — runner will pick up"; actions.appendChild(info);
+    } else {
+      const info = document.createElement("div"); info.className = "muted"; info.textContent = stepLabels[statusIndex(t.status)]; actions.appendChild(info);
+    }
+  }
+
+  function clearDetail(){
+    $("#selId").textContent = "—";
+    $("#pTitle").textContent = "—";
+    $("#pRoom").textContent = "Room —";
+    $("#dietBadges").innerHTML = ""; $("#allerBadges").innerHTML = "";
+    $("#items").innerHTML = ""; $("#nutrition").innerHTML = "";
+    $("#noteLine").textContent = "—"; $("#stepsRow").innerHTML = ""; $("#track").style.width = "0";
+    $("#actions").innerHTML = "";
+  }
+
+  function renderDetailStepper(t){
+    const row = $("#stepsRow");
+    row.innerHTML = stepOrder.map((s,i)=>{
+      const idx = statusIndex(t.status);
+      const cls = i < idx ? "step done" : (i===idx ? "step active" : "step");
+      return `
+        <div class="${cls}">
+          <div class="dot">${i+1}</div>
+          <div class="label">${stepLabels[i]}</div>
+        </div>`;
+    }).join("");
+    const pct = (statusIndex(t.status)/(stepOrder.length-1))*100;
+    $("#track").style.width = `calc(${pct}% - 18px)`;
+  }
+
+  /* ---------- Actions ---------- */
+  function acceptTicket(id){
+    const t = state.tickets.find(x=>x.id===id); if(!t) return;
+    // soft-reserve inventory (mock)
+    console.log(`[audit] Soft-reserve inventory for ${t.id}`);
+    t.status = "preparing"; t.start = Date.now();
+    toast("Accepted — preparing. Nurse + patient notified.");
+    renderList(); selectTicket(id);
+  }
+
+  function moveToWaiting(id){
+    const t = state.tickets.find(x=>x.id===id); if(!t) return;
+    t.status = "waiting"; delete t.start; stopTimer();
+    toast("Moved to Waiting for runner");
+    renderList(); selectTicket(id);
+  }
+
+  function setupReject(id){
+    $("#rejTitle").textContent = `Reject order — ${id}`;
+    $("#rejSubmit").dataset.target = id;
+  }
+
+  function rejectTicket(id, payload){
+    const i = state.tickets.findIndex(x=>x.id===id); if(i<0) return;
+    console.log(`[audit] Rejected ${id}:`, payload);
+    state.tickets.splice(i,1);
+    toast("Order rejected — nurse + patient notified.");
+    renderList();
+    if(state.tickets.length) selectTicket(state.tickets[0].id); else clearDetail();
+  }
+
+  function printLabel(){
+    const t = state.tickets.find(x=>x.id===selectedId); if(!t) return;
+    const items = (t.items||[]).map(i=>i.name).join(", ");
+    const allers = (t.allergens||[]).join(", ") || "None";
+    const w = window.open("", "_blank", "width=420,height=320");
+    w.document.write(`
+      <html><head><title>Label ${t.id}</title>
+      <style>body{font-family:ui-monospace,monospace;margin:14px}.box{border:2px dashed #333;padding:10px}.row{display:flex;justify-content:space-between}.mono{font-family:ui-monospace,monospace}</style></head>
+      <body onload="window.print()">
+        <div class="box">
+          <div class="row"><strong>BedsideBistro</strong><span class="mono">${t.id}</span></div>
+          <div>Patient: <strong>${t.name}</strong></div>
+          <div>Room: <strong>${t.room}</strong> · MRN: <strong>${t.mrn}</strong></div>
+          <div>Items: ${items}</div>
+          <div>Allergens: <strong>${allers}</strong></div>
+        </div>
+      </body></html>`);
+    w.document.close();
+  }
+
+  // Timer (only one visible at a time in detail)
+  let timerHandle = null;
+  function startTimer(t){
+    stopTimer();
+    const timerEl = $("#prepTimer"); if(!timerEl) return;
+    const tick = ()=>{
+      const ms = Date.now() - (t.start||Date.now());
+      const mins = Math.floor(ms/60000), secs = Math.floor((ms%60000)/1000);
+      timerEl.textContent = `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
+    };
+    tick(); timerHandle = setInterval(tick, 1000);
+  }
+  function stopTimer(){ if(timerHandle){ clearInterval(timerHandle); timerHandle=null; } }
+
+  /* ---------- Wiring ---------- */
+  document.addEventListener("click", (e)=>{
+    if(e.target.id === "printBtn") return printLabel();
+    if(e.target.id === "rejSubmit"){
+      const id = e.target.dataset.target;
+      const payload = { reason: $("#rejReason").value, bundle: $("#rejBundle").value, note: $("#rejNote").value.trim() };
+      $("#rejectToggle").checked = false; $("#rejNote").value = ""; $("#rejBundle").value = "";
+      rejectTicket(id, payload);
+    }
+  });
+
+  $("#bulkAccept").addEventListener("click", ()=>{
+    state.tickets.filter(t=>t.status==="received").forEach(t=> acceptTicket(t.id));
+  });
+
+  // Print button live binding
+  $("#printBtn").addEventListener("click", printLabel);
+
+  // Init
+  renderList();
+</script>
+</body>
+</html>

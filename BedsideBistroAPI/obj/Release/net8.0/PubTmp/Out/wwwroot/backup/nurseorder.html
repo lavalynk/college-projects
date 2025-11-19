@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BedsideBistro — Nurse · Create Order</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --radius:18px; --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:
+    radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%),
+    var(--bg); color:var(--text); font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  :focus-visible{outline:3px solid #8fd6b9; outline-offset:2px; border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .badge{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow);font-size:.9rem}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Layout */
+  main{width:min(1280px,94vw);margin:0 auto;padding:10px 0 24px}
+  .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}
+  @media (max-width:1000px){ .grid{grid-template-columns:1fr} }
+
+  /* Panels */
+  .panel{background:#fff;border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+  .hint{color:var(--muted);font-size:.95rem}
+
+  /* Controls */
+  .controls{display:grid;gap:10px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .select,.input{border:1px solid var(--outline);border-radius:12px;padding:10px;font:inherit;background:#fff}
+  .search{display:flex;align-items:center;gap:.6rem;background:#fff;border:1px solid var(--outline);border-radius:12px;padding:10px}
+  .search input{border:0;outline:0;background:transparent;font:inherit;width:100%}
+  .checkbox{display:flex;align-items:center;gap:8px}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--outline);background:var(--tab);color:#49544f;padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer}
+  .tab[aria-current="page"]{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(47,125,95,.25)}
+
+  /* Items list */
+  .list{display:grid;gap:10px}
+  .item{
+    display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:center;
+    border:1px solid var(--outline);border-radius:16px;padding:10px;background:#fff;
+  }
+  .thumb{width:86px;height:68px;border-radius:10px;overflow:hidden;background:#edf5f1;border:1px solid var(--outline)}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .title{font-weight:800;margin:0 0 4px}
+  .muted{color:var(--muted)}
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:6px}
+  .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+  .chip.bad{border-style:solid;border-color:#f0c1c1;background:#ffe9e9;color:#8b2323}
+  .actions{display:flex;gap:8px;align-items:center}
+  .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+  .btn[disabled]{opacity:.55;cursor:not-allowed}
+  .conflict{background:#fff8f8}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.92rem}
+
+  /* Summary */
+  .cardish{border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff}
+  .summary-title{display:flex;justify-content:space-between;align-items:center}
+  .line{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--outline);border-radius:12px;padding:8px;background:#fff}
+  .tiny{font-size:.85rem}
+  .total{display:flex;gap:8px;flex-wrap:wrap}
+  .cta{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .danger{border-color:#e7b0b0;color:#8b2323}
+
+  /* Modals (checkbox trick) */
+  #warnToggle,#customizeToggle,#submitToggle{display:none}
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.35);
+    display:none;align-items:center;justify-content:center;padding:16px;z-index:60
+  }
+  #warnToggle:checked ~ .modal.warn,
+  #customizeToggle:checked ~ .modal.customize,
+  #submitToggle:checked ~ .modal.submit{display:flex}
+  .modal .sheet{
+    width:min(760px,96vw);background:#fff;border:1px solid var(--outline);
+    border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);overflow:hidden
+  }
+  .modal header{position:unset;backdrop-filter:none}
+  .modal .pad{padding:14px 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:560px){ .grid2{grid-template-columns:1fr} }
+  textarea{width:100%;min-height:90px;border:1px solid var(--outline);border-radius:12px;padding:10px;font:inherit;resize:vertical}
+
+  /* Toast */
+  .toast{position:fixed;right:16px;bottom:16px;background:#162d25;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);transition:all .25s ease;z-index:80}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav" style="width:min(1280px,94vw);margin:0 auto">
+    <div class="brand">
+      <span class="badge">BB</span>
+      <span>BedsideBistro — Nurse</span>
+    </div>
+    <div style="margin-left:auto" class="hint">Create a patient order</div>
+    <button class="profile" aria-label="Nurse profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- LEFT: Builder -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Create order</h2>
+          <div class="hint">Filtered by patient chart</div>
+        </div>
+
+        <div class="controls">
+          <div class="row">
+            <label class="select-wrap">
+              <span class="tiny">Patient</span><br/>
+              <select id="patientSel" class="select" aria-label="Select patient"></select>
+            </label>
+            <label class="checkbox">
+              <input id="showAll" type="checkbox" />
+              <span class="tiny">Show all items (unfiltered)</span>
+            </label>
+          </div>
+
+          <label class="search" aria-label="Search menu">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input id="search" type="search" placeholder="Search by name, ingredient, tag…" />
+          </label>
+
+          <div class="tabs" role="tablist" aria-label="Filters">
+            <button class="tab" data-tab="All" aria-current="page">All</button>
+            <button class="tab" data-tab="Salads">Salads</button>
+            <button class="tab" data-tab="Sandwiches">Sandwiches</button>
+            <button class="tab" data-tab="Soups">Soups</button>
+            <button class="tab" data-tab="Snacks">Snacks</button>
+            <button class="tab" data-tab="Drinks">Drinks</button>
+            <button class="tab" data-tab="Low Sodium">Low Sodium</button>
+            <button class="tab" data-tab="Vegetarian">Vegetarian</button>
+            <button class="tab" data-tab="Vegan">Vegan</button>
+            <button class="tab" data-tab="Renal-friendly">Renal-friendly</button>
+          </div>
+        </div>
+
+        <div style="height:8px"></div>
+
+        <div id="itemList" class="list" role="list" aria-label="Menu items"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Order Summary -->
+    <aside class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Order summary</h2>
+          <span class="hint" id="summaryPatient">—</span>
+        </div>
+
+        <div class="cardish">
+          <div id="summaryList" class="list"></div>
+          <p class="hint" id="emptyHint">No items yet — add from the left.</p>
+        </div>
+
+        <div class="cardish" style="margin-top:10px">
+          <div class="summary-title">
+            <strong>Totals</strong>
+            <span class="hint mono" id="totalCount">0 items</span>
+          </div>
+          <div class="total" style="margin-top:6px" id="totals">
+            <span class="chip mono">~0 kcal</span>
+            <span class="chip mono">0g protein</span>
+            <span class="chip mono">&lt; 0mg sodium</span>
+          </div>
+          <div id="conflictSummary" class="chips" style="margin-top:8px"></div>
+        </div>
+
+        <div class="cta" style="margin-top:10px">
+          <button id="clearCart" class="btn danger" type="button">Clear</button>
+          <label for="submitToggle" class="btn primary" role="button" id="submitBtn">Submit order</label>
+        </div>
+
+        <p class="hint tiny" style="margin-top:6px">Submitting will set status to <strong>Order received</strong> (no additional approval needed).</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Warn modal: unfilter -->
+<input type="checkbox" id="warnToggle" />
+<div class="modal-backdrop warn" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="warnTitle">
+    <div class="pad">
+      <div class="section-head">
+        <h2 id="warnTitle">Show all items?</h2>
+        <label for="warnToggle" class="btn" role="button">Cancel</label>
+      </div>
+      <p class="hint">Unfiltering may show items that conflict with the patient’s allergies or diet order. We’ll flag them in red.</p>
+      <div class="cta">
+        <label for="warnToggle" class="btn">Go back</label>
+        <button id="proceedUnfilter" class="btn primary" type="button">Proceed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customize modal -->
+<input type="checkbox" id="customizeToggle" />
+<div class="modal-backdrop customize" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="custTitle">
+    <div class="pad">
+      <div class="section-head">
+        <h2 id="custTitle">Customize</h2>
+        <label for="customizeToggle" class="btn" role="button">Close</label>
+      </div>
+
+      <div class="grid2">
+        <div class="cardish">
+          <div class="row" style="gap:12px;align-items:center">
+            <div class="thumb" style="width:120px;height:80px"><img id="custImg" alt=""></div>
+            <div>
+              <strong id="custName"></strong>
+              <div class="hint" id="custDesc"></div>
+              <div class="chips" id="custTags" style="margin-top:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cardish">
+          <strong>Options</strong>
+          <div class="grid2" style="margin-top:6px">
+            <label><span class="tiny">Portion</span>
+              <select id="custPortion" class="select">
+                <option selected>Regular</option><option>Light</option><option>Large</option>
+              </select>
+            </label>
+            <label><span class="tiny">Dressing/Sauce</span>
+              <select id="custDressing" class="select">
+                <option>On</option><option selected>On the side</option><option>None</option>
+              </select>
+            </label>
+          </div>
+          <div class="chips" style="margin-top:6px">
+            <label><input type="checkbox" class="mod" value="No salt"> No added salt</label>
+            <label><input type="checkbox" class="mod" value="No croutons"> No croutons</label>
+            <label><input type="checkbox" class="mod" value="Extra tomatoes"> Extra tomatoes</label>
+            <label><input type="checkbox" class="mod" value="Cut in halves"> Cut in halves</label>
+          </div>
+          <label style="display:block;margin-top:6px">
+            <span class="tiny">Notes</span>
+            <textarea id="custNote" placeholder="Short note…"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <div class="cta" style="margin-top:10px">
+        <button id="addToOrder" class="btn primary" type="button">Add to order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit (approve-like) modal -->
+<input type="checkbox" id="submitToggle" />
+<div class="modal-backdrop submit" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="submitTitle">
+    <div class="pad">
+      <div class="section-head">
+        <h2 id="submitTitle">Approve this order?</h2>
+        <label for="submitToggle" class="btn" role="button">Go back</label>
+      </div>
+      <p>Have you reviewed the order carefully with the patient?</p>
+      <div class="cta">
+        <label for="submitToggle" class="btn">Go back</label>
+        <button id="submitConfirm" class="btn primary" type="button">Approve & Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">Saved</div>
+
+<script>
+/* ---------- Sample data ---------- */
+const PATIENTS = [
+  {id:"p1", name:"Wooldridge, Josie", mrn:"004219", room:"4B-213", dietTags:["Low Sodium"], allergies:["Peanut"]},
+  {id:"p2", name:"Singh, Maya", mrn:"003108", room:"3A-118", dietTags:["Whole Grain"], allergies:["Wheat"]},
+  {id:"p3", name:"Nguyen, Linh", mrn:"002808", room:"4B-210", dietTags:["Vegetarian"], allergies:["Milk"]},
+];
+
+const MENU = [
+  {id:"i1", name:"Grilled Chicken Salad", cat:"Salads", desc:"Greens, tomatoes, cucumber, light vinaigrette", kcal:350, protein:28, sodium:380, tags:["Low Sodium"], allergens:[], img:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop"},
+  {id:"i2", name:"Turkey & Avocado Sandwich", cat:"Sandwiches", desc:"Turkey, avocado, whole grain bread", kcal:420, protein:24, sodium:520, tags:["Whole Grain"], allergens:["Wheat"], img:"https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=800&auto=format&fit=crop"},
+  {id:"i3", name:"Tomato Basil Soup", cat:"Soups", desc:"Slow-simmered tomatoes, basil, touch of cream", kcal:210, protein:6, sodium:420, tags:["Vegetarian"], allergens:["Milk"], img:"https://images.unsplash.com/photo-1543357480-c60d40007a0b?q=80&w=800&auto=format&fit=crop"},
+  {id:"i4", name:"Roasted Veggie Bowl", cat:"Snacks", desc:"Roasted veg, quinoa, tahini", kcal:380, protein:13, sodium:410, tags:["Vegan","Renal-friendly"], allergens:["Sesame"], img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop"},
+  {id:"i5", name:"Cucumber Mint Water", cat:"Drinks", desc:"Chilled, unsweetened, refreshing", kcal:0, protein:0, sodium:0, tags:["Hydration"], allergens:[], img:"https://images.unsplash.com/photo-1532635223-4787e1b13999?q=80&w=800&auto=format&fit=crop"},
+  {id:"i6", name:"Oatmeal", cat:"Breakfast", desc:"Warm oats, optional fruit", kcal:290, protein:8, sodium:170, tags:["Vegetarian","Low Sodium"], allergens:[], img:"https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=800&auto=format&fit=crop"},
+  {id:"i7", name:"PB&J Sandwich", cat:"Sandwiches", desc:"Classic peanut butter & jam", kcal:460, protein:13, sodium:430, tags:["Whole Grain"], allergens:["Peanut","Wheat"], img:"https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800&auto=format&fit=crop"},
+  {id:"i8", name:"Chocolate Milk", cat:"Drinks", desc:"1% milk, cocoa", kcal:190, protein:8, sodium:150, tags:[], allergens:["Milk"], img:"https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=800&auto=format&fit=crop"},
+];
+
+/* ---------- State ---------- */
+const state = {
+  patientId: PATIENTS[0].id,
+  showAll: false,
+  tab: "All",
+  search: "",
+  cart: [], // {menuId, name, mods:[], kcal, protein, sodium, conflictReasons:[]}
+  customizeTarget: null
+};
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const toast = (msg)=>{ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1400); };
+const getPatient = ()=> PATIENTS.find(p=>p.id===state.patientId);
+const intersects = (a,b)=> a.some(x=> b.includes(x));
+function itemConflicts(item, patient){
+  const reasons = [];
+  if(intersects(item.allergens, patient.allergies)) reasons.push(`Allergen: ${item.allergens.filter(a=>patient.allergies.includes(a)).join(", ")}`);
+  (patient.dietTags||[]).forEach(tag=>{
+    if(!item.tags.includes(tag)) reasons.push(`Not ${tag}`);
+  });
+  return reasons;
+}
+
+/* ---------- Rendering: controls ---------- */
+function renderPatients(){
+  const sel = $("#patientSel");
+  sel.innerHTML = PATIENTS.map(p=>`<option value="${p.id}">${p.name} — ${p.room} • MRN ${p.mrn}</option>`).join("");
+  sel.value = state.patientId;
+  $("#summaryPatient").textContent = `${getPatient().name} — ${getPatient().room} • MRN ${getPatient().mrn}`;
+}
+
+function renderTabs(){
+  $$(".tab").forEach(btn=>{
+    btn.toggleAttribute("aria-current", btn.dataset.tab===state.tab);
+  });
+}
+
+/* ---------- Rendering: menu list ---------- */
+function filteredMenu(){
+  const p = getPatient();
+  const q = state.search.trim().toLowerCase();
+
+  return MENU.filter(it=>{
+    // tab filter
+    if(state.tab!=="All"){
+      const byCat = ["Salads","Sandwiches","Soups","Snacks","Drinks","Breakfast"].includes(state.tab) && it.cat===state.tab;
+      const byTag = it.tags.includes(state.tab);
+      if(!(byCat || byTag)) return false;
+    }
+    // search
+    const hay = (it.name+" "+it.desc+" "+it.tags.join(" ")).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+
+    // compatibility
+    if(!state.showAll){
+      const reasons = itemConflicts(it,p);
+      if(reasons.length) return false;
+    }
+    return true;
+  }).map(it=>{
+    const reasons = itemConflicts(it, getPatient());
+    return {...it, reasons};
+  });
+}
+
+function renderList(){
+  const list = $("#itemList");
+  const items = filteredMenu();
+  list.innerHTML = "";
+  if(!items.length){
+    list.innerHTML = `<div class="hint">No items match the current filters.</div>`;
+    return;
+  }
+  items.forEach(it=>{
+    const row = document.createElement("article");
+    row.className = "item";
+    if(state.showAll && it.reasons.length) row.classList.add("conflict");
+    row.innerHTML = `
+      <div class="thumb"><img src="${it.img}" alt=""></div>
+      <div>
+        <div class="title">${it.name}</div>
+        <div class="muted">${it.desc}</div>
+        <div class="chips">
+          <span class="chip">${it.cat}</span>
+          ${it.tags.map(t=>`<span class="chip">${t}</span>`).join("")}
+          ${it.allergens.map(a=>`<span class="chip bad">${a} allergen</span>`).join("")}
+          ${state.showAll && it.reasons.length ? it.reasons.map(r=>`<span class="chip bad">Conflict: ${r}</span>`).join("") : ""}
+          <span class="chip mono">~${it.kcal} kcal</span>
+          <span class="chip mono">${it.protein}g protein</span>
+          <span class="chip mono">&lt; ${it.sodium}mg Na</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" data-add="${it.id}">Add to order</button>
+      </div>
+    `;
+    row.querySelector('[data-add]').addEventListener("click", ()=> openCustomize(it.id));
+    list.appendChild(row);
+  });
+}
+
+/* ---------- Customize ---------- */
+function openCustomize(menuId){
+  const it = MENU.find(x=>x.id===menuId);
+  state.customizeTarget = it;
+  $("#custTitle").textContent = `Customize — ${it.name}`;
+  $("#custImg").src = it.img; $("#custImg").alt = it.name;
+  $("#custName").textContent = it.name;
+  $("#custDesc").textContent = it.desc;
+  $("#custTags").innerHTML = [it.cat, ...it.tags].map(t=>`<span class="chip">${t}</span>`).join("");
+  $("#custPortion").value = "Regular";
+  $("#custDressing").value = "On the side";
+  $$(".mod").forEach(m=> m.checked=false);
+  $("#custNote").value = "";
+  document.getElementById("customizeToggle").checked = true;
+}
+
+$("#addToOrder").addEventListener("click", ()=>{
+  const it = state.customizeTarget;
+  if(!it) return;
+  const mods = [
+    ...$$(".mod:checked").map(m=>m.value),
+    $("#custDressing").value !== "On" ? `Dressing: ${$("#custDressing").value}` : null,
+    $("#custPortion").value !== "Regular" ? `Portion: ${$("#custPortion").value}` : null,
+    $("#custNote").value.trim()? `Note: ${$("#custNote").value.trim()}`: null
+  ].filter(Boolean);
+  const reasons = itemConflicts(it, getPatient());
+  state.cart.push({
+    menuId: it.id, name: it.name, mods,
+    kcal: it.kcal, protein: it.protein, sodium: it.sodium,
+    conflicts: reasons
+  });
+  document.getElementById("customizeToggle").checked = false;
+  toast("Added to order");
+  renderSummary();
+});
+
+/* ---------- Summary ---------- */
+function renderSummary(){
+  const list = $("#summaryList");
+  list.innerHTML = "";
+  if(!state.cart.length) $("#emptyHint").style.display="block"; else $("#emptyHint").style.display="none";
+
+  state.cart.forEach((c, idx)=>{
+    const line = document.createElement("div");
+    line.className = "line";
+    line.innerHTML = `
+      <div>
+        <strong>${c.name}</strong>
+        <div class="tiny muted">${c.mods.length? c.mods.join(" · ") : "No modifications"}</div>
+        ${c.conflicts?.length? `<div class="chips" style="margin-top:4px">${c.conflicts.map(r=>`<span class="chip bad">Conflict: ${r}</span>`).join("")}</div>`:""}
+      </div>
+      <div class="mono tiny" style="text-align:right">
+        ~${c.kcal} kcal<br/>${c.protein}g • &lt; ${c.sodium}mg Na
+        <div><button class="btn" data-remove="${idx}">Remove</button></div>
+      </div>
+    `;
+    line.querySelector('[data-remove]').addEventListener("click", (e)=>{
+      const i = parseInt(e.currentTarget.dataset.remove,10);
+      state.cart.splice(i,1);
+      renderSummary();
+    });
+    list.appendChild(line);
+  });
+
+  // totals
+  const tot = state.cart.reduce((a,x)=>({kcal:a.kcal+x.kcal, protein:a.protein+x.protein, sodium:a.sodium+x.sodium}),{kcal:0,protein:0,sodium:0});
+  $("#totals").innerHTML = `
+    <span class="chip mono">~${tot.kcal} kcal</span>
+    <span class="chip mono">${tot.protein}g protein</span>
+    <span class="chip mono">&lt; ${tot.sodium}mg sodium</span>
+  `;
+
+  // conflict rollup
+  const conflicts = [...new Set(state.cart.flatMap(x=>x.conflicts||[]))];
+  const wrap = $("#conflictSummary");
+  wrap.innerHTML = conflicts.length ? conflicts.map(r=>`<span class="chip bad">${r}</span>`).join("") : "";
+  $("#totalCount").textContent = `${state.cart.length} item${state.cart.length!==1?"s":""}`;
+}
+
+/* ---------- Events: controls ---------- */
+$("#patientSel").addEventListener("change", (e)=>{
+  state.patientId = e.target.value;
+  state.cart = []; // clear cart when switching
+  renderPatients(); renderList(); renderSummary();
+});
+
+$("#search").addEventListener("input", (e)=>{ state.search = e.target.value; renderList(); });
+
+document.addEventListener("click", (e)=>{
+  const t = e.target.closest(".tab");
+  if(!t) return;
+  state.tab = t.dataset.tab; renderTabs(); renderList();
+});
+
+const showAll = $("#showAll");
+showAll.addEventListener("change", (e)=>{
+  if(e.target.checked){
+    // warn first
+    document.getElementById("warnToggle").checked = true;
+  } else {
+    state.showAll = false;
+    renderList();
+  }
+});
+$("#proceedUnfilter").addEventListener("click", ()=>{
+  state.showAll = true;
+  document.getElementById("warnToggle").checked = false;
+  renderList();
+});
+
+/* ---------- Submit flow ---------- */
+$("#submitConfirm").addEventListener("click", ()=>{
+  if(!state.cart.length){ toast("Add at least one item"); return; }
+  document.getElementById("submitToggle").checked = false;
+  // Pretend we post; then:
+  toast("Order submitted — status set to Order received");
+  // reset builder
+  state.cart = [];
+  renderSummary();
+});
+
+$("#clearCart").addEventListener("click", ()=>{
+  state.cart = [];
+  renderSummary();
+});
+
+/* ---------- Init ---------- */
+function init(){
+  renderPatients();
+  renderTabs();
+  renderList();
+  renderSummary();
+}
+init();
+</script>
+</body>
+</html>

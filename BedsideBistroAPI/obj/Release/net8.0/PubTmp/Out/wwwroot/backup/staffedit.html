@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Admin · Staff</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+    --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: system-ui,-apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+    color:var(--text); line-height:1.45;
+  }
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .container{width:min(1280px,94vw);margin:0 auto}
+  .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+  .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(460px,50vw);box-shadow:var(--shadow)}
+  .search input{border:0;outline:0;width:100%;font:inherit;background:transparent}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Toolbar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:8px 0 12px}
+  .select,.input{border:1px solid var(--outline);border-radius:12px;padding:8px 10px;font:inherit;background:#fff}
+  .tab{appearance:none;border:1px solid var(--outline);background:var(--tab);color:var(--muted);padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer}
+  .tab[aria-current="page"]{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(47,125,95,.25)}
+  .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+  .danger{border-color:#e7b0b0;color:#8b2323}
+  .success{border-color:#bde2d2;color:#205b44}
+  .hint{color:var(--muted);font-size:.95rem}
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap}
+  .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+
+  /* List */
+  .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:clip}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+
+  .staff-list{display:grid;gap:12px}
+  .row{
+    border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff;
+    display:grid;grid-template-columns: 1.1fr 140px 180px 1fr 120px auto;gap:12px;align-items:center;
+  }
+  @media (max-width:1000px){ .row{grid-template-columns:1fr;align-items:start} }
+  .pfp{
+    width:40px;height:40px;border-radius:12px;background:#e8f3ee;display:grid;place-items:center;
+    border:1px solid var(--outline);font-weight:800;color:#2f5348;margin-right:8px;
+  }
+  .who{display:flex;align-items:center;gap:10px}
+  .who .name{font-weight:800}
+  .muted{color:var(--muted)}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.9rem}
+  .status{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--outline);border-radius:999px;padding:6px 10px;background:#fbfefd;font-weight:700;font-size:.85rem}
+  .s-active{border-color:#cfe5db;color:var(--ok)}
+  .s-suspended{border-color:#f0d9b3;color:var(--warn)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .units{display:flex;gap:.4rem;flex-wrap:wrap}
+  .badge{background:var(--brand-050);color:var(--brand);border:1px solid var(--outline);font-size:.75rem;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap}
+
+  /* Modals (checkbox trick) */
+  #createToggle,#editToggle,#deleteToggle{display:none}
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.3);
+    display:none;align-items:center;justify-content:center;padding:16px;z-index:60;
+  }
+  #createToggle:checked ~ .modal-backdrop.create,
+  #editToggle:checked ~ .modal-backdrop.edit,
+  #deleteToggle:checked ~ .modal-backdrop.delete{display:flex}
+  .modal{
+    width:min(700px,96vw);background:#fff;border:1px solid var(--outline);
+    border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);overflow:hidden
+  }
+  .modal .pad{padding:14px 16px}
+  .modal .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:620px){ .grid2{grid-template-columns:1fr} }
+  .textarea{width:100%;min-height:90px;border:1px solid var(--outline);border-radius:12px;padding:10px;font:inherit;resize:vertical;background:#fff}
+  .rowline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .form{display:grid;gap:10px}
+  label strong{display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+<a href="#content" class="sr-only">Skip to content</a>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Admin</span>
+    </div>
+
+    <label class="search" aria-label="Search staff">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input type="search" placeholder="Search by name, email, role…" />
+    </label>
+
+    <button class="profile" aria-label="Admin profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+      <span class="sr-only">Open profile</span>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <!-- Toolbar -->
+  <div class="toolbar" role="region" aria-label="Filters">
+    <label class="hint" for="role">Role:</label>
+    <select id="role" class="select">
+      <option selected>All</option>
+      <option>Admin</option>
+      <option>Kitchen</option>
+      <option>Nurse</option>
+      <option>Runner</option>
+      <option>Support</option>
+    </select>
+
+    <label class="hint" for="unit">Unit:</label>
+    <select id="unit" class="select">
+      <option selected>All units</option>
+      <option>4B — Cardiac</option>
+      <option>5C — Renal</option>
+      <option>3A — Ortho</option>
+    </select>
+
+    <label class="hint" for="status">Status:</label>
+    <select id="status" class="select">
+      <option selected>All</option>
+      <option>Active</option>
+      <option>Suspended</option>
+    </select>
+
+    <span style="flex:1"></span>
+    <label for="createToggle" class="ghost success" role="button">New staff</label>
+    <button class="ghost" type="button">Export CSV</button>
+  </div>
+
+  <!-- Staff list -->
+  <section class="panel">
+    <div class="pad">
+      <div class="section-head">
+        <h2>Staff directory</h2>
+        <div class="chips">
+          <span class="chip">Active: <strong class="mono" id="countActive">5</strong></span>
+          <span class="chip">Suspended: <strong class="mono" id="countSuspended">1</strong></span>
+        </div>
+      </div>
+
+      <div class="staff-list" id="staffList" role="list">
+        <!-- Row template -->
+        <div class="row" role="listitem" data-status="active">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">AR</div>
+            <div>
+              <div class="name">Alex Ritchie</div>
+              <div class="muted mono">alex.ritchie@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Admin</div>
+          <div class="units">
+            <span class="badge">All units</span>
+          </div>
+          <div class="muted">2FA: Enabled · Last login 07:40</div>
+          <div class="status s-active">Active</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Disable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Alex Ritchie">Delete…</label>
+          </div>
+        </div>
+
+        <div class="row" role="listitem" data-status="active">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">SP</div>
+            <div>
+              <div class="name">Sam Patel</div>
+              <div class="muted mono">sam.patel@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Kitchen</div>
+          <div class="units"><span class="badge">4B</span><span class="badge">5C</span></div>
+          <div class="muted">2FA: Required · Last login 07:52</div>
+          <div class="status s-active">Active</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Disable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Sam Patel">Delete…</label>
+          </div>
+        </div>
+
+        <div class="row" role="listitem" data-status="suspended">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">JT</div>
+            <div>
+              <div class="name">Jordan Tran</div>
+              <div class="muted mono">jordan.tran@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Runner</div>
+          <div class="units"><span class="badge">4B</span></div>
+          <div class="muted">2FA: Pending · Last login —</div>
+          <div class="status s-suspended">Suspended</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Enable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Jordan Tran">Delete…</label>
+          </div>
+        </div>
+
+        <div class="row" role="listitem" data-status="active">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">LR</div>
+            <div>
+              <div class="name">Linh Ramirez</div>
+              <div class="muted mono">linh.ramirez@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Nurse</div>
+          <div class="units"><span class="badge">3A</span></div>
+          <div class="muted">2FA: Enabled · Last login 07:18</div>
+          <div class="status s-active">Active</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Disable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Linh Ramirez">Delete…</label>
+          </div>
+        </div>
+
+        <div class="row" role="listitem" data-status="active">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">MS</div>
+            <div>
+              <div class="name">Maya Singh</div>
+              <div class="muted mono">maya.singh@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Nurse</div>
+          <div class="units"><span class="badge">3A</span><span class="badge">4B</span></div>
+          <div class="muted">2FA: Enabled · Last login 07:58</div>
+          <div class="status s-active">Active</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Disable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Maya Singh">Delete…</label>
+          </div>
+        </div>
+
+        <div class="row" role="listitem" data-status="active">
+          <div class="who">
+            <div class="pfp" aria-hidden="true">KB</div>
+            <div>
+              <div class="name">Kai Brown</div>
+              <div class="muted mono">kai.brown@hospital.org</div>
+            </div>
+          </div>
+          <div class="mono">Support</div>
+          <div class="units"><span class="badge">All units</span></div>
+          <div class="muted">2FA: Enabled · Last login 06:40</div>
+          <div class="status s-active">Active</div>
+          <div class="actions">
+            <label for="editToggle" class="ghost" role="button">Edit</label>
+            <button class="ghost" data-action="toggle">Disable</button>
+            <label for="deleteToggle" class="ghost danger" role="button" data-target="Kai Brown">Delete…</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- CREATE MODAL -->
+<input type="checkbox" id="createToggle" />
+<div class="modal-backdrop create" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <div class="pad">
+      <div class="head">
+        <strong id="createTitle">Create staff member</strong>
+        <label for="createToggle" class="ghost" role="button" aria-label="Close">Close</label>
+      </div>
+
+      <form id="createForm" class="form">
+        <div class="grid2">
+          <label><strong>First name</strong><input class="input" id="newFirst" required /></label>
+          <label><strong>Last name</strong><input class="input" id="newLast" required /></label>
+        </div>
+        <label><strong>Email</strong><input type="email" class="input" id="newEmail" required placeholder="name@hospital.org" /></label>
+        <div class="grid2">
+          <label>
+            <strong>Role</strong>
+            <select id="newRole" class="select" required>
+              <option>Admin</option><option>Kitchen</option><option>Nurse</option><option>Runner</option><option>Support</option>
+            </select>
+          </label>
+          <label>
+            <strong>Status</strong>
+            <select id="newStatus" class="select">
+              <option selected>Active</option>
+              <option>Suspended</option>
+            </select>
+          </label>
+        </div>
+
+        <div>
+          <strong>Units</strong>
+          <div class="rowline chips" id="unitChips">
+            <label><input type="checkbox" value="3A" /> 3A</label>
+            <label><input type="checkbox" value="4B" /> 4B</label>
+            <label><input type="checkbox" value="5C" /> 5C</label>
+            <label><input type="checkbox" value="All units" /> All units</label>
+          </div>
+        </div>
+
+        <div class="rowline" style="justify-content:flex-end">
+          <button class="ghost success" type="submit">Create staff</button>
+        </div>
+        <p class="hint">Prototype only — no real accounts are created.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL (static example) -->
+<input type="checkbox" id="editToggle" />
+<div class="modal-backdrop edit" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="pad">
+      <div class="head">
+        <strong id="editTitle">Edit staff — Alex Ritchie</strong>
+        <label for="editToggle" class="ghost" role="button" aria-label="Close">Close</label>
+      </div>
+
+      <div class="form">
+        <div class="grid2">
+          <label><strong>First name</strong><input class="input" value="Alex" /></label>
+          <label><strong>Last name</strong><input class="input" value="Ritchie" /></label>
+        </div>
+        <label><strong>Email</strong><input class="input" value="alex.ritchie@hospital.org" /></label>
+        <div class="grid2">
+          <label>
+            <strong>Role</strong>
+            <select class="select">
+              <option selected>Admin</option><option>Kitchen</option><option>Nurse</option><option>Runner</option><option>Support</option>
+            </select>
+          </label>
+          <label>
+            <strong>Status</strong>
+            <select class="select">
+              <option selected>Active</option>
+              <option>Suspended</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <strong>Units</strong>
+          <div class="chips">
+            <label><input type="checkbox" checked/> All units</label>
+            <label><input type="checkbox" /> 3A</label>
+            <label><input type="checkbox" /> 4B</label>
+            <label><input type="checkbox" /> 5C</label>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <label><strong>2FA</strong><select class="select"><option>Enabled</option><option>Required</option><option>Disabled</option></select></label>
+          <label><strong>SSO</strong><select class="select"><option selected>Enforced</option><option>Optional</option></select></label>
+        </div>
+
+        <div class="rowline" style="justify-content:flex-end; gap:8px">
+          <button class="ghost" type="button">Reset 2FA</button>
+          <button class="ghost" type="button">Send password reset</button>
+          <button class="ghost success" type="button">Save changes</button>
+        </div>
+        <p class="hint">Prototype only — edits are illustrative.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<input type="checkbox" id="deleteToggle" />
+<div class="modal-backdrop delete" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+    <div class="pad">
+      <div class="head">
+        <strong id="deleteTitle">Delete staff</strong>
+        <label for="deleteToggle" class="ghost" role="button" aria-label="Close">Close</label>
+      </div>
+      <p class="hint" id="deleteName">Are you sure you want to delete this profile?</p>
+      <p class="hint">This removes access immediately. Action is logged to the audit trail.</p>
+      <div class="rowline" style="justify-content:flex-end">
+        <label for="deleteToggle" class="ghost">Cancel</label>
+        <button class="ghost danger" id="confirmDelete" type="button">Delete</button>
+      </div>

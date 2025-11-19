@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Menu Editor</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+    --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);color:var(--text)}
+  .container{width:min(1280px,94vw);margin:0 auto}
+  a{color:inherit;text-decoration:none}
+  .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+  .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(480px,60vw);box-shadow:var(--shadow)}
+  .search input{border:0;outline:0;width:100%;font:inherit;background:transparent;color:var(--text)}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Layout */
+  .layout{display:grid;grid-template-columns:0.9fr 1.1fr;gap:18px;margin:12px 0 28px}
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr} }
+
+  /* Panels */
+  .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+  .hint{color:var(--muted)}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--brand-050);border-color:#b8d9cb}
+
+  /* Lists */
+  .list{display:grid;gap:12px}
+  .cell{border:1px solid var(--outline);border-radius:16px;padding:10px;background:#fff;display:grid;gap:6px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .name{font-weight:800}
+  .pill{font-size:.82rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd}
+  .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+
+  /* Editor */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:8px}
+  @media (max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+  label strong{display:block;margin-bottom:6px}
+  .input,.select,.textarea{border:1px solid var(--outline);border-radius:12px;padding:9px 10px;font:inherit;background:#fff;width:100%}
+  .textarea{min-height:96px;resize:vertical}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  .table{border:1px solid var(--outline);border-radius:16px;overflow:hidden}
+  .thead,.trow{display:grid;grid-template-columns:1.4fr .8fr .8fr auto;gap:8px;align-items:center}
+  .thead{background:#f0f5f3;font-weight:800;padding:10px}
+  .trow{border-top:1px solid var(--outline);padding:10px}
+  .muted{color:var(--muted)}
+  .right{display:flex;justify-content:flex-end;gap:8px}
+  .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+  .btn.danger{border-color:#e7b0b0;color:#8b2323}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#content">Skip to content</a>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Menu Editor</span>
+    </div>
+    <label class="search" aria-label="Search menus/items">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" placeholder="Search by item, ingredient, tag…" />
+    </label>
+    <button class="profile" aria-label="Kitchen profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <div class="layout">
+    <!-- LEFT: Menus & Items -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Menus</h2>
+          <div class="hint">Breakfast · Lunch · Dinner</div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Menu types">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="tab-breakfast" id="btn-breakfast">Breakfast</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-lunch" id="btn-lunch">Lunch</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-dinner" id="btn-dinner">Dinner</button>
+          <span style="flex:1"></span>
+          <button class="ghost" id="addItem">+ Add item</button>
+        </div>
+
+        <!-- BREAKFAST LIST -->
+        <div id="tab-breakfast" class="list" role="tabpanel" aria-labelledby="btn-breakfast" style="margin-top:10px">
+          <article class="cell" data-id="B-101"><div class="meta"><span class="name">Oatmeal Bowl</span><span class="pill">Vegetarian</span><span class="pill">~320 kcal</span></div><div class="muted">Rolled oats, banana, almonds, honey</div></article>
+          <article class="cell" data-id="B-102"><div class="meta"><span class="name">Egg White Scramble</span><span class="pill">High Protein</span><span class="pill">~280 kcal</span></div><div class="muted">Egg whites, spinach, peppers</div></article>
+        </div>
+
+        <!-- LUNCH LIST -->
+        <div id="tab-lunch" class="list" role="tabpanel" aria-labelledby="btn-lunch" hidden style="margin-top:10px">
+          <article class="cell" data-id="L-201"><div class="meta"><span class="name">Grilled Chicken Salad</span><span class="pill">Low Na</span><span class="pill">~350 kcal</span></div><div class="muted">Greens, grilled chicken, tomatoes, vinaigrette</div></article>
+          <article class="cell" data-id="L-202"><div class="meta"><span class="name">Veggie Bowl</span><span class="pill">Vegan</span><span class="pill">~380 kcal</span></div><div class="muted">Roasted veggies, tahini</div></article>
+        </div>
+
+        <!-- DINNER LIST -->
+        <div id="tab-dinner" class="list" role="tabpanel" aria-labelledby="btn-dinner" hidden style="margin-top:10px">
+          <article class="cell" data-id="D-301"><div class="meta"><span class="name">Baked Salmon</span><span class="pill">Renal-friendly</span><span class="pill">~420 kcal</span></div><div class="muted">Salmon, lemon, herbs</div></article>
+          <article class="cell" data-id="D-302"><div class="meta"><span class="name">Tomato Basil Soup</span><span class="pill">Vegetarian</span><span class="pill">~210 kcal</span></div><div class="muted">Tomato, basil, cream</div></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Item Editor -->
+    <aside class="panel" aria-label="Item editor">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Edit item</h2>
+          <div class="hint">Add · Remove · Edit — with seasons, ingredients, and nutrition</div>
+        </div>
+
+        <div class="grid2">
+          <label>
+            <strong>Item name</strong>
+            <input id="itemName" class="input" placeholder="e.g., Grilled Chicken Salad" />
+          </label>
+          <label>
+            <strong>Menu type</strong>
+            <select id="menuType" class="select">
+              <option>Breakfast</option>
+              <option selected>Lunch</option>
+              <option>Dinner</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid2" style="margin-top:10px">
+          <label>
+            <strong>Seasons</strong>
+            <div class="grid3">
+              <label class="pill"><input type="checkbox" checked /> Spring</label>
+              <label class="pill"><input type="checkbox" checked /> Summer</label>
+              <label class="pill"><input type="checkbox" /> Fall</label>
+            </div>
+            <div class="grid3" style="margin-top:8px">
+              <label><strong class="muted">Active from</strong><input type="date" class="input" value="2025-05-01"></label>
+              <label><strong class="muted">Active to</strong><input type="date" class="input" value="2025-09-30"></label>
+              <label><strong class="muted">Blackout dates (optional)</strong><input type="text" class="input" placeholder="e.g., 2025-07-04" /></label>
+            </div>
+          </label>
+          <label>
+            <strong>Tags (optional)</strong>
+            <input class="input" placeholder="e.g., Low Na, Vegan option" />
+          </label>
+        </div>
+
+        <div class="grid2" style="margin-top:10px">
+          <label>
+            <strong>Short description</strong>
+            <textarea class="textarea" placeholder="Quick blurb that appears in menus…"></textarea>
+          </label>
+          <label>
+            <strong>Kitchen notes</strong>
+            <textarea class="textarea" placeholder="Prep tips, holding, plating…"></textarea>
+          </label>
+        </div>
+
+        <!-- INGREDIENTS -->
+        <div class="section-head" style="margin-top:12px"><h2>Ingredients</h2><div class="hint">Quantities per serving</div></div>
+        <div class="table" id="ingTable">
+          <div class="thead"><div>Ingredient</div><div>Qty</div><div>Unit</div><div></div></div>
+          <div class="trow">
+            <input class="input" placeholder="Chicken breast" />
+            <input class="input" type="number" step="0.01" placeholder="4" />
+            <select class="select"><option>oz</option><option>g</option><option>lb</option><option>cup</option></select>
+            <div class="right"><button class="btn danger" data-row-del>Remove</button></div>
+          </div>
+          <div class="trow">
+            <input class="input" placeholder="Mixed greens" />
+            <input class="input" type="number" step="0.01" placeholder="2" />
+            <select class="select"><option>cup</option><option>g</option><option>oz</option></select>
+            <div class="right"><button class="btn danger" data-row-del>Remove</button></div>
+          </div>
+        </div>
+        <div class="right" style="margin-top:8px"><button class="btn" id="addIng">+ Add ingredient</button></div>
+
+        <!-- NUTRITION -->
+        <div class="section-head" style="margin-top:14px"><h2>Nutrition facts</h2><div class="hint">Per serving</div></div>
+        <div class="grid3">
+          <label><strong>Calories (kcal)</strong><input class="input" type="number" placeholder="350" /></label>
+          <label><strong>Protein (g)</strong><input class="input" type="number" step="0.1" placeholder="28" /></label>
+          <label><strong>Total carbs (g)</strong><input class="input" type="number" step="0.1" placeholder="24" /></label>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <label><strong>Total fat (g)</strong><input class="input" type="number" step="0.1" placeholder="10" /></label>
+          <label><strong>Sodium (mg)</strong><input class="input" type="number" step="1" placeholder="380" /></label>
+          <label><strong>Potassium (mg)</strong><input class="input" type="number" step="1" placeholder="400" /></label>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <label><strong>Sugars (g)</strong><input class="input" type="number" step="0.1" placeholder="6" /></label>
+          <label><strong>Fiber (g)</strong><input class="input" type="number" step="0.1" placeholder="4" /></label>
+          <label><strong>Serving size</strong><input class="input" placeholder="1 bowl (350g)" /></label>
+        </div>
+
+        <div class="right" style="margin-top:14px">
+          <button class="btn danger">Archive item</button>
+          <button class="btn">Duplicate</button>
+          <button class="btn primary">Save changes</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // Super-light interactivity to match prototype vibes
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  // Tabs
+  const tabs = [
+    {btn:'#btn-breakfast', panel:'#tab-breakfast'},
+    {btn:'#btn-lunch', panel:'#tab-lunch'},
+    {btn:'#btn-dinner', panel:'#tab-dinner'}
+  ];
+  tabs.forEach(({btn,panel})=>{
+    document.querySelector(btn).addEventListener('click', ()=>{
+      tabs.forEach(({btn:bb,panel:pp})=>{
+        document.querySelector(bb).setAttribute('aria-selected', bb===btn ? 'true' : 'false');
+        document.querySelector(pp).hidden = pp!==panel;
+      });
+    });
+  });
+
+  // Select item to edit (fills only name/menu as a hint)
+  $$('.cell').forEach(c=> c.addEventListener('click', ()=>{
+    const title = c.querySelector('.name')?.textContent.trim() || '';
+    $('#itemName').value = title;
+    const rootId = c.dataset.id||'';
+    const type = rootId.startsWith('B-')? 'Breakfast' : rootId.startsWith('L-')? 'Lunch' : 'Dinner';
+    $('#menuType').value = type;
+  }));
+
+  // Ingredients add/remove
+  $('#addIng').addEventListener('click', ()=>{
+    const row = document.createElement('div');
+    row.className = 'trow';
+    row.innerHTML = `
+      <input class="input" placeholder="Ingredient name" />
+      <input class="input" type="number" step="0.01" placeholder="1" />
+      <select class="select"><option>g</option><option>oz</option><option>cup</option><option>tbsp</option></select>
+      <div class="right"><button class="btn danger" data-row-del>Remove</button></div>`;
+    $('#ingTable').appendChild(row);
+  });
+  document.addEventListener('click', (e)=>{
+    if(e.target.matches('[data-row-del]')){ e.target.closest('.trow')?.remove(); }
+  });
+
+  // Add item button (creates a placeholder in current tab)
+  $('#addItem').addEventListener('click', ()=>{
+    const active = tabs.find(t=> document.querySelector(t.btn).getAttribute('aria-selected')==='true');
+    const list = document.querySelector(active.panel);
+    const el = document.createElement('article');
+    el.className = 'cell';
+    el.dataset.id = (active.panel.includes('breakfast')?'B':'L') + '-' + Math.floor(Math.random()*900+100);
+    el.innerHTML = `<div class="meta"><span class="name">New item</span><span class="pill">Draft</span></div><div class="muted">Click to edit details →</div>`;
+    el.addEventListener('click', ()=>{
+      $('#itemName').value = 'New item';
+      $('#menuType').value = document.querySelector(active.btn).textContent.trim();
+    });
+    list.prepend(el);
+  });
+</script>
+</body>
+</html>

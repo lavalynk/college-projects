@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Item</title>  
+  <link rel="stylesheet" href="global.css" />
+</head>
+<body class="itemcustomization">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container site-header__bar" role="navigation" aria-label="Top">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+
+      <label class="site-search" aria-label="Search menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input id="searchBox" type="search" name="q" placeholder="Search meals, ingredients, allergens…" />
+      </label>
+
+      <!-- Cart button (anchor, accessible, badge supported) -->
+      <a class="site-cart" id="cartLink" href="ordersummary.html" aria-label="Open cart" data-count="0">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M7 18a2 2 0 1 0 2 2 2 2 0 0 0-2-2zm10 0a2 2 0 1 0 2 2 2 2 0 0 0-2-2zM7.16 6l.84 2h9.42a1 1 0 0 1 .96 1.28l-1.6 5.6A2 2 0 0 1 14.86 16H9.14a2 2 0 0 1-1.92-1.12L5.1 6.76A1 1 0 0 0 4.16 6H3V4h2.34a2 2 0 0 1 1.82 1.2z"/>
+        </svg>
+        <span class="sr-only">Cart</span>
+        <span class="site-cart__badge" aria-hidden="true">0</span>
+      </a>
+
+      <!-- Profile button (anchor) -->
+      <a class="site-profile" id="profileLink" href="userprofile.html" aria-label="Open profile menu">
+        <div class="site-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+          </svg>
+        </div>
+        <span class="sr-only">Profile</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="content" class="container" style="margin-top:10px">
+    <!-- Error box up top (hidden by default, shown by JS if something bad happens) -->
+    <div id="itemError" class="alert-inline" role="alert" hidden></div>
+
+    <!-- Crumbs -->
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="patientview.html">Menu</a> <span class="sep">›</span>
+      <a id="crumbCategoryLink" href="#">Category</a> <span class="sep">›</span>
+      <span id="crumbItem" aria-current="page">Loading…</span>
+    </nav>
+
+    <!-- Two-column -->
+    <div class="layout">
+      <!-- LEFT: Preview & summary -->
+      <section class="panel" aria-label="Item preview and summary">
+        <div class="media" aria-hidden="true">
+          <img id="itemImage"
+               src=""
+               alt=""
+               style="background:#eee;object-fit:cover;width:100%;max-height:450px;border-radius:var(--radius-md,12px)">
+        </div>
+        <div class="pad">
+          <div class="titlebar">
+            <div>
+              <h1 id="itemName" style="margin:0 0 4px;font-size:1.35rem">Loading…</h1>
+              <div class="subtle" id="itemDesc"> </div>
+            </div>
+            <span class="badge" id="lowSodiumBadge" hidden>Low Sodium</span>
+          </div>
+
+          <div class="meta" style="margin-top:12px" id="itemMeta"> </div>
+
+          <div class="nutri" aria-label="Nutrition quick facts" id="itemQuickFacts">
+            <!-- we'll inject pills -->
+          </div>
+
+          <div class="tags" style="margin-top:10px" aria-label="Allergen and diet tags" id="itemAllergenTags">
+            <!-- we'll inject tags -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Config -->
+      <aside class="panel" aria-label="Configure your order">
+        <div class="pad form-section">
+          <div class="group" role="group" aria-labelledby="mods">
+            <h4 id="mods">Modify ingredients</h4>
+            <div class="opt-list" id="modsList">
+              <!-- filled from item data (like removable ingredients) -->
+            </div>
+          </div>
+
+          <div class="group" role="group" aria-labelledby="extras">
+            <h4 id="extras">Add extras</h4>
+            <div class="opt-list" id="extrasList">
+              <!-- filled from item data (like add-ons) -->
+            </div>
+          </div>
+
+          <div class="group" role="group" aria-labelledby="dress">
+            <h4 id="dress">Dressing</h4>
+            <div class="opt-list" id="dressingList">
+              <!-- radio options populated here -->
+            </div>
+          </div>
+
+          <div class="group" role="group" aria-labelledby="qty">
+            <h4 id="qty">Quantity</h4>
+            <div class="line">
+              <span class="subtle">Number of servings</span>
+              <div class="qty">
+                <button aria-label="Decrease quantity">−</button>
+                <input type="number" value="1" min="1" aria-label="Quantity">
+                <button aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="group" role="group" aria-labelledby="notes">
+            <h4 id="notes">Notes (optional)</h4>
+            <textarea class="textarea" placeholder="Any special instructions? e.g., cut chicken smaller, extra lemon wedge."></textarea>
+          </div>
+
+          <a id="addToOrderLink" class="cta" href="ordersummary.html" role="button" aria-label="Add to order">
+            Add to Order
+          </a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+<script>
+(function(){
+
+  // --------------------------------------------------
+  // shared helpers
+  // --------------------------------------------------
+  const USING_FILE = location.protocol === 'file:';
+  const BASE = USING_FILE ? 'https://bedsidebistroapi.winhost.com' : '';
+  const MENU_URL = BASE + '/api/menu';
+
+  const pick = (o, keys) => {
+    for (const k of keys) {
+      if (o[k] !== undefined && o[k] !== null) return o[k];
+    }
+    return undefined;
+  };
+
+  const getId        = it => pick(it, ['id','ID','Id','itemId','ItemId','itemID','ItemID','intItemID','intItemId']);
+  const getName      = it => pick(it, ['name','Name','strItemName','itemName']) ?? '(unnamed)';
+  const getCategory  = it => pick(it, ['category','Category','strCategory','meal','Meal']) ?? '';
+  const getDesc      = it => pick(it, ['description','Description','strDescription','details','Details']) ?? '';
+  const getCal       = it => pick(it, ['calories','Calories','decCalories']);
+  const getNa        = it => pick(it, ['sodiumMg','SodiumMg','decSodiumMG']);
+  const getPro       = it => pick(it, ['proteinG','ProteinG','decProteinG']);
+  const getCarb      = it => pick(it, ['carbsG','CarbsG','decCarbsG']);
+  const getFat       = it => pick(it, ['fatG','FatG','decFatG']);
+  const isLow        = it => !!pick(it, ['lowSodium','LowSodium','bitLowSodium']);
+  const getImgPath   = it => pick(it, ['imagePath','ImagePath','strImagePath']);
+  const getAllergens = it => pick(it, ['allergens','Allergens','strAllergens']); // string or array
+  const getTags      = it => pick(it, ['tags','Tags','arrTags']);
+  const getRemovable = it => pick(it, ['removable','Removable','canRemove','arrRemovable']);
+  const getExtras    = it => pick(it, ['extras','Extras','addOns','arrExtras']);
+  const getDressing  = it => pick(it, ['dressings','Dressings','arrDressings']);
+
+  function imgSrc(item){
+    const p = getImgPath(item) || '/food-images/default.jpg';
+    if (p.startsWith('http')) return p;
+    return BASE + (p.startsWith('/') ? p : '/' + p);
+  }
+  const safeText = (v, fallback='') => (v === undefined || v === null) ? fallback : String(v);
+
+  // read params for MRN + passthroughs
+  const pageParams = new URLSearchParams(location.search);
+  const MRN  = pageParams.get('mrn')  || '';
+  const MEAL = pageParams.get('meal') || '';
+  const BY   = pageParams.get('by')   || '';
+
+  // build a URL while preserving/adding params
+  function withParams(baseUrl, extra = {}) {
+    const url = new URL(baseUrl, location.origin);
+    const p = new URLSearchParams(url.search);
+    Object.entries(extra).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') p.set(k, v);
+    });
+    url.search = p.toString();
+    return baseUrl.startsWith('http')
+      ? url.toString()
+      : url.pathname + (url.search ? ('?' + p.toString()) : '');
+  }
+
+  // update cart/profile links to carry MRN
+  const cartA = document.getElementById('cartLink');
+  if (cartA) cartA.href = withParams(cartA.getAttribute('href') || 'ordersummary.html', { mrn: MRN });
+
+  const profA = document.getElementById('profileLink');
+  if (profA) profA.href = withParams(profA.getAttribute('href') || 'userprofile.html', { mrn: MRN });
+
+  // --------------------------------------------------
+  // DOM refs
+  // --------------------------------------------------
+  const errBox           = document.getElementById('itemError');
+  const crumbCategory    = document.getElementById('crumbCategoryLink');
+  const crumbItem        = document.getElementById('crumbItem');
+
+  const itemImage        = document.getElementById('itemImage');
+  const itemNameEl       = document.getElementById('itemName');
+  const itemDescEl       = document.getElementById('itemDesc');
+  const itemMetaEl       = document.getElementById('itemMeta');
+  const lowSodiumBadgeEl = document.getElementById('lowSodiumBadge');
+
+  const quickFactsEl     = document.getElementById('itemQuickFacts');
+  const allergenTagsEl   = document.getElementById('itemAllergenTags');
+
+  const modsListEl       = document.getElementById('modsList');
+  const extrasListEl     = document.getElementById('extrasList');
+  const dressingListEl   = document.getElementById('dressingList');
+
+  // --------------------------------------------------
+  // error handling
+  // --------------------------------------------------
+  function showError(msg){
+    if (!errBox) return;
+    errBox.hidden = false;
+    errBox.textContent = msg;
+  }
+
+  // --------------------------------------------------
+  // render functions
+  // --------------------------------------------------
+  function renderItemDetails(item){
+    const name = getName(item);
+    const cat  = getCategory(item);
+    const desc = getDesc(item);
+
+    itemNameEl.textContent = name;
+    itemDescEl.textContent = desc || '—';
+
+    crumbItem.textContent = name;
+    crumbCategory.textContent = cat || 'Category';
+    crumbCategory.href = withParams('patientview.html', { mrn: MRN || undefined, cat: cat || undefined });
+
+    lowSodiumBadgeEl.hidden = !isLow(item);
+
+    const tagList = getTags(item);
+    if (Array.isArray(tagList) && tagList.length){
+      itemMetaEl.textContent = tagList.join(' • ');
+    } else if (typeof tagList === 'string' && tagList.trim() !== ''){
+      itemMetaEl.textContent = tagList;
+    } else {
+      itemMetaEl.textContent = '';
+    }
+
+    itemImage.src = imgSrc(item);
+    itemImage.alt = name;
+
+    const facts = [];
+    const cal = getCal(item), pro = getPro(item), na = getNa(item), carb = getCarb(item), fat = getFat(item);
+    if (cal !== undefined && cal !== null && cal !== '') facts.push(`${cal} kcal`);
+    if (pro !== undefined && pro !== null && pro !== '') facts.push(`${pro}g protein`);
+    if (na  !== undefined && na  !== null && na  !== '') facts.push(`${na}mg sodium`);
+    if (carb!== undefined && carb!== null && carb!== '') facts.push(`${carb}g carbs`);
+    if (fat !== undefined && fat !== null && fat !== '') facts.push(`${fat}g fat`);
+    quickFactsEl.innerHTML = facts.map(f => `<span class="pill">${f}</span>`).join(' ');
+
+    const allergenData = getAllergens(item);
+    const allergenArr =
+      Array.isArray(allergenData) ? allergenData :
+      (typeof allergenData === 'string' && allergenData.trim() !== '' ? [allergenData] : []);
+    allergenTagsEl.innerHTML = allergenArr.map(a => `<span class="pill">${safeText(a)}</span>`).join(' ');
+
+    const rem = getRemovable(item);
+    modsListEl.innerHTML = (Array.isArray(rem) && rem.length)
+      ? rem.map(opt => `
+          <label class="line">
+            <span>${safeText(opt)}</span>
+            <input type="checkbox" />
+          </label>`).join('')
+      : `<div class="subtle">No removable ingredients.</div>`;
+
+    const extras = getExtras(item);
+    extrasListEl.innerHTML = (Array.isArray(extras) && extras.length)
+      ? extras.map(opt => `
+          <label class="line">
+            <span>${safeText(opt)}</span>
+            <input type="checkbox" />
+          </label>`).join('')
+      : `<div class="subtle">No extras available.</div>`;
+
+    const dressings = getDressing(item);
+    dressingListEl.innerHTML = (Array.isArray(dressings) && dressings.length)
+      ? dressings.map((opt, idx) => `
+          <label class="line">
+            <span>${safeText(opt)}</span>
+            <input type="radio" name="dress"${idx===0?' checked':''}/>
+          </label>`).join('')
+      : `
+        <label class="line">
+          <span>No dressing options</span>
+          <input type="radio" name="dress" checked />
+        </label>`;
+
+    // wire Add to Order → forwards mrn/add/qty/notes (+ meal/by if present)
+    const itemName = name;
+    const addA = document.getElementById('addToOrderLink');
+    if (addA) {
+      addA.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const qtyInput   = document.querySelector('.qty input[type="number"]');
+        const notesArea  = document.querySelector('textarea.textarea');
+        const qty        = qtyInput ? Math.max(1, Number(qtyInput.value || 1)) : 1;
+        const userNotes  = (notesArea?.value || '').trim();
+
+        const remos = Array.from(document.querySelectorAll('#modsList input[type="checkbox"]:checked'))
+          .map(cb => cb.closest('label')?.querySelector('span')?.textContent?.trim()).filter(Boolean);
+
+        const extrasSel = Array.from(document.querySelectorAll('#extrasList input[type="checkbox"]:checked'))
+          .map(cb => cb.closest('label')?.querySelector('span')?.textContent?.trim()).filter(Boolean);
+
+        const dress = (document.querySelector('#dressingList input[type="radio"]:checked')?.closest('label')
+                      ?.querySelector('span')?.textContent || '').trim();
+
+        const parts = [];
+        if (remos.length)  parts.push(`Mods: ${remos.join(', ')}`);
+        if (extrasSel.length) parts.push(`Extras: ${extrasSel.join(', ')}`);
+        if (dress)         parts.push(`Dressing: ${dress}`);
+        if (userNotes)     parts.push(`Notes: ${userNotes}`);
+        const notes = parts.join(' | ');
+
+        const target = withParams('ordersummary.html', {
+          mrn: MRN || undefined,
+          add: itemName,                         // ordersummary will POST via ItemsByName TVP
+          qty: qty > 1 ? String(qty) : undefined,
+          notes: notes || undefined,
+          meal: MEAL || undefined,
+          by: BY || undefined
+        });
+
+        window.location.href = target;
+      });
+    }
+
+    document.title = 'BedsideBistro — ' + name;
+  }
+
+  // --------------------------------------------------
+  // main load logic
+  // --------------------------------------------------
+  const params = new URLSearchParams(window.location.search);
+  const requestedId = params.get('id');
+
+  if (!requestedId) {
+    showError('Missing item ID.');
+    itemNameEl.textContent = 'Unavailable';
+    itemDescEl.textContent = 'This item could not be loaded.';
+  } else {
+    loadSingleItem(requestedId);
+  }
+
+  async function loadSingleItem(idWanted){
+    let res, txt;
+    try {
+      res = await fetch(MENU_URL, { headers: { 'Accept':'application/json' }});
+    } catch (err){
+      console.warn('fetch fail', err);
+      showError('Unable to load item right now. Please try again later.');
+      itemNameEl.textContent = 'Unavailable';
+      itemDescEl.textContent = 'Network error.';
+      return;
+    }
+
+    try { txt = await res.text(); } catch { txt=''; }
+
+    if (!res.ok){
+      console.warn('bad status', res.status, txt.slice(0,2000));
+      showError('Server error loading item.');
+      itemNameEl.textContent = 'Unavailable';
+      itemDescEl.textContent = 'Server error.';
+      return;
+    }
+
+    let data;
+    try {
+      data = txt ? JSON.parse(txt) : null;
+    } catch (err){
+      console.warn('bad json', err, txt.slice(0,2000));
+      showError('Item data returned in an unexpected format.');
+      itemNameEl.textContent = 'Unavailable';
+      itemDescEl.textContent = 'Invalid item data.';
+      return;
+    }
+
+    const list = Array.isArray(data) ? data : [];
+    const found = list.find(it => {
+      const thisId = getId(it);
+      if (thisId === undefined || thisId === null) return false;
+      return String(thisId) === String(idWanted);
+    });
+
+    if (!found){
+      showError('Item not found.');
+      itemNameEl.textContent = 'Not found';
+      itemDescEl.textContent = 'That item ID does not exist.';
+      return;
+    }
+
+    renderItemDetails(found);
+  }
+
+})();
+</script>
+
+</body>
+</html>

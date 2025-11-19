@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Login</title>
+  <link rel="stylesheet" href="global.css" />
+</head>
+<body class="login">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+    </div>
+  </header>
+
+
+  <main id="content" class="center-wrap">
+    <section class="login-card" aria-label="Login">
+      <div class="login-head">
+        <div class="login-title">
+          <h1>Welcome back</h1>
+          <span class="subtle">Sign in to manage your meals</span>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sign-in type">
+          <button id="tabPatient" class="tab" role="tab" aria-current="page">Patient</button>
+          <button id="tabStaff" class="tab" role="tab">Staff</button>
+        </nav>
+      </div>
+
+      <div class="login-body">
+        <!-- Left: Cheerful panel -->
+        <div class="panel hero" aria-hidden="false">
+          <div class="banner" aria-hidden="true">
+            <img src="/food-images/sidesalad.jpg" alt="Fresh salad">
+          </div>
+          <div>
+            <strong>Healthy, simple, on your schedule.</strong>
+            <p class="subtle" style="margin:6px 0 0">
+              Review nutrition, set preferences, and let the kitchen know your needs — straight from your bed.
+            </p>
+          </div>
+          <div class="chip-row">
+            <span class="chip">Low-sodium highlights</span>
+            <span class="chip">Fluid tracking</span>
+            <span class="chip">Allergen alerts</span>
+            <span class="chip">Diet orders synced</span>
+          </div>
+        </div>
+
+        <!-- Right: Form -->
+        <form id="loginForm" class="panel form" action="#" method="post" aria-label="Sign in">
+          <!-- Patient (MRN) inputs -->
+          <div id="patientFields" class="field">
+            <label for="mrn">Medical Record Number (MRN)</label>
+            <input id="mrn" name="mrn" inputmode="numeric" autocomplete="off" placeholder="e.g., MRN001" />
+            <div class="hint">Check your wristband or discharge papers.</div>
+          </div>
+
+          <!-- Staff (username/password) inputs -->
+          <div id="staffFields" style="display:none">
+            <div class="field">
+              <label for="uname">User name</label>
+              <input id="uname" name="uname" autocomplete="username" placeholder="e.g., nurse1" />
+            </div>
+            <div class="field">
+              <label for="upass">Password</label>
+              <input id="upass" name="upass" type="password" autocomplete="current-password" />
+            </div>
+          </div>
+
+          <div id="formError" class="hint" style="color:#b00020;display:none;margin:4px 0;"></div>
+
+          <div class="row">
+            <button class="cta" type="submit" aria-label="Sign in">Sign in</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    BedsideBistro · prototype interface · no patient data stored
+  </footer>
+
+  <!-- Script: Patient MRN & Staff username/password login -->
+  <script>
+  (function () {
+    // --- Element references ---
+    const tabPatient = document.getElementById('tabPatient');
+    const tabStaff   = document.getElementById('tabStaff');
+    const form       = document.getElementById('loginForm');
+
+    const patientFields = document.getElementById('patientFields');
+    const staffFields   = document.getElementById('staffFields');
+
+    const mrnInput   = document.getElementById('mrn');
+    const unameInput = document.getElementById('uname');
+    const upassInput = document.getElementById('upass');
+    const errorEl    = document.getElementById('formError');
+
+    // If required elements aren't found, stop execution
+    if (!form || !patientFields || !staffFields) return;
+
+    // Default login mode — starts on the "Patient" tab
+    let mode = 'patient'; // can switch to 'staff' when user clicks the tab
+
+    // --- API endpoint URLs ---
+    const CHECK_MRN_URL   = (mrn) => `/api/patients/exists?mrn=${encodeURIComponent(mrn)}`;
+    const STAFF_LOGIN_URL = `/api/users/login`;
+
+    // --- UI Helper Functions ---
+
+    /** Displays an inline red error message under the form */
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+
+    /** Hides any visible error message */
+    function hideError() {
+      errorEl.style.display = 'none';
+    }
+
+    /**
+     * Switches between login modes ("patient" or "staff")
+     * Adjusts visible form fields and ARIA attributes for accessibility.
+     */
+    function setMode(newMode) {
+      mode = newMode;
+      if (mode === 'patient') {
+        patientFields.style.display = '';
+        staffFields.style.display = 'none';
+        tabPatient?.setAttribute('aria-current', 'page');
+        tabStaff?.removeAttribute('aria-current');
+        mrnInput?.focus();
+      } else {
+        patientFields.style.display = 'none';
+        staffFields.style.display = '';
+        tabStaff?.setAttribute('aria-current', 'page');
+        tabPatient?.removeAttribute('aria-current');
+        unameInput?.focus();
+      }
+      hideError();
+    }
+
+    // --- Tab click events ---
+    // Switches form view when a tab is clicked
+    tabPatient?.addEventListener('click', (e) => { e.preventDefault(); setMode('patient'); });
+    tabStaff  ?.addEventListener('click', (e) => { e.preventDefault(); setMode('staff'); });
+
+    /**
+     * Handles login form submission for both modes:
+     * - Patient: checks MRN in database via /api/patients/exists
+     * - Staff: validates username/password via /api/users/login
+     */
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        // ----------------------------
+        // Patient login (by MRN only)
+        // ----------------------------
+        if (mode === 'patient') {
+          const mrn = (mrnInput?.value || '').trim().toUpperCase();
+          if (!mrn) { showError('Please enter your MRN.'); mrnInput?.focus(); return; }
+
+          const res = await fetch(CHECK_MRN_URL(mrn));
+
+          // If MRN found → go to patientview
+          if (res.ok) {
+            sessionStorage.setItem('mrn', mrn);
+            location.assign(`/patientview.html?mrn=${encodeURIComponent(mrn)}`);
+          }
+          // Not found → show error
+          else if (res.status === 404) {
+            showError('Login failed. MRN not found.');
+            mrnInput?.focus();
+          }
+          // Any other response → general error
+          else {
+            showError('Login failed. Please try again.');
+          }
+        }
+
+        // ----------------------------
+        // Staff login (username + password)
+        // ----------------------------
+        else {
+          const userName = (unameInput?.value || '').trim();
+          const password = (upassInput?.value || '').trim();
+          if (!userName || !password) { showError('Enter user name and password.'); return; }
+
+          const res = await fetch(STAFF_LOGIN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ userName, password })
+          });
+
+          if (res.status === 200) {
+            // Parse JSON — works whether backend uses camelCase or PascalCase
+            const user = await res.json();
+            sessionStorage.setItem('user', JSON.stringify(user));
+
+            // Normalize property names
+            const uName = user.userName ?? user.UserName ?? '';
+            const role  = (user.role ?? user.Role ?? '').toLowerCase();
+
+            if (!uName) console.warn('Login payload missing userName:', user);
+
+            const encodedUser = encodeURIComponent(uName);
+
+            // Redirect based on role
+            if (role === 'admin') {
+              location.assign(`/adminview.html?user=${encodedUser}`);
+            } else {
+              location.assign(`/nurseview.html?user=${encodedUser}`);
+            }
+          }
+          else if (res.status === 401) {
+            // Unauthorized (bad password)
+            showError('Invalid credentials.');
+            if (upassInput) { upassInput.value = ''; upassInput.focus(); }
+          }
+          else {
+            // Other server error
+            showError('Login failed. Please try again.');
+          }
+        }
+      } catch (err) {
+        // Network or unexpected error
+        showError('Network error. Please try again.');
+      } finally {
+        // Always re-enable the button
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+
+    // --- Default state on page load ---
+    setMode('patient'); // shows MRN field by default
+
+    // --- Error listener for debugging ---
+    // Helps catch JS issues directly in the browser console
+    window.addEventListener('error', (ev) => {
+      console.error('Script error:', ev.error || ev.message);
+    });
+  })();
+  </script>
+
+</body>
+</html>

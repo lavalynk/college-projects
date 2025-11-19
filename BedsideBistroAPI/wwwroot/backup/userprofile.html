@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Profile & Dietary Limits</title>
+  <link rel="stylesheet" href="global.css" />
+  <style>
+    :root{
+      --brand:#2f7d66; --brand-600:#1e5a49; --brand-050:#eaf2ef;
+      --muted:#58756a; --outline:#d8e4de;
+      --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+    }
+    .grid-2{display:grid;grid-template-columns:1.05fr 1fr;gap:22px}
+    @media(max-width:1020px){.grid-2{grid-template-columns:1fr}}
+    .chips{display:flex;gap:.5rem;flex-wrap:wrap}
+    .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+    .cardish{border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff}
+    .patient{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff}
+    .pfp{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#e7f3ed,#d6efe5);border:1px solid var(--outline);font-weight:800;color:#2f5348}
+    .muted{color:var(--muted)}
+    .badge{background:var(--brand-050);color:#1f4f40;border:1px solid var(--outline);border-radius:999px;padding:4px 8px;font-size:.75rem;font-weight:700;white-space:nowrap}
+    .badge.fallback{border-style:dashed; opacity:.95}
+    .pill{border:1px solid var(--outline);border-radius:999px;padding:8px 14px;font-size:.82rem;background:#fff;cursor:pointer;text-align:center;font-weight:700;letter-spacing:.2px}
+    .pill.orders{border-color:#cfe5db;background:#f6fbf9}
+    .mono{font-variant-numeric:tabular-nums}
+
+    /* meters */
+    .meter .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .row .inline{display:flex;gap:10px;align-items:center}
+    .bar{--val:0%;position:relative;height:12px;border-radius:999px;background:#eaf2ef;border:1px solid var(--outline);overflow:hidden}
+    .bar>span{position:absolute;left:0;top:0;bottom:0;width:var(--val)}
+    .bar.ok>span{background:var(--ok)}
+    .bar.warn>span{background:var(--warn)}
+    .bar.alert>span{background:var(--alert)}
+
+    /* Orders dialog */
+    dialog#ordersDlg{border:1px solid var(--outline);border-radius:16px;width:min(980px,96vw);padding:0;box-shadow:0 18px 36px rgba(0,0,0,.2)}
+    .dlg-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--outline);background:#f6fbf9;border-radius:16px 16px 0 0}
+    .dlg-body{padding:10px 16px 16px}
+    .dlg-foot{padding:12px 16px;border-top:1px solid var(--outline);display:flex;justify-content:flex-end;gap:10px;border-radius:0 0 16px 16px}
+    .btn{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--outline)}
+    table.orders{width:100%;border-collapse:collapse}
+    table.orders th, table.orders td{border-bottom:1px solid #eef6f2;text-align:left;padding:10px 8px;vertical-align:top}
+    table.orders tr:hover{background:#f9fdfb}
+    .status{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;border:1px solid var(--outline)}
+    .status.delivered{background:#ecf7f2;color:#1b6b4f;border-color:#cfe5db}
+    .status.preparing{background:#fff6e6;color:#8a5a00;border-color:#f0dfb8}
+    .status.cancelled{background:#feecee;color:#8b1e2b;border-color:#f4c2c8}
+
+    /* Pretty items row under each order */
+    .itemsRow td{padding:0;background:#fff}
+    .orderItemsBox{padding:10px 12px;text-align:center}
+    .orderItemsBox .sep{height:1px;background:repeating-linear-gradient(90deg,#d8e4de, #d8e4de 10px, transparent 10px, transparent 20px); margin:6px 0 10px}
+    .orderItemsBox .itemsList{display:inline-block;text-align:left;min-width:360px}
+    .orderItemsBox .itemline{display:flex;justify-content:space-between;gap:14px;padding:2px 0}
+    .orderItemsBox .qty{font-variant-numeric:tabular-nums}
+
+    /* Debug */
+    #fabDebug{position:fixed;right:16px;bottom:16px;z-index:98;border:0;border-radius:999px;padding:10px 14px;background:#2b2f31;color:#fff;cursor:pointer}
+    .debug{position:fixed;left:16px;right:16px;bottom:64px;background:#0e1512;color:#e7fff6;border:1px solid #224b3a;border-radius:12px;padding:12px;box-shadow:0 10px 24px rgba(0,0,0,.35);z-index:97}
+    .debug[hidden]{display:none}
+    .debug h4{margin:0 0 6px}
+    .debug small{color:#bde7d7}
+    .debug .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .debug .btn{background:#16392d;color:#c6f1e1;border:1px solid #2a6a53;border-radius:8px;padding:6px 10px;font-size:.8rem;cursor:pointer}
+    .debug details{margin-top:6px}
+    .debug pre{margin:0}
+    .debug .scroll{max-height:240px;overflow:auto;border:1px solid #18382d;border-radius:8px;background:#09110e;padding:8px}
+  </style>
+</head>
+
+<body class="patientdashboard">
+  <header class="site-header">
+    <div class="container site-header__bar">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+
+      <label class="site-search" aria-label="Search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input id="searchBox" type="search" placeholder="Search settings, allergies…" />
+      </label>
+
+      <a class="site-profile" id="profileLink" href="#" aria-label="Profile">
+        <div class="site-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+        </div>
+        <span class="sr-only">Profile</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="content" class="container" style="margin-top:10px">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="#">Profile</a> <span class="sep">›</span>
+      <span aria-current="page">Dietary Limits</span>
+    </nav>
+
+    <div class="grid-2">
+      <!-- LEFT -->
+      <section class="panel">
+        <div class="pad">
+          <div class="section-head">
+            <h2>Your profile</h2>
+            <div class="hint">Visit-linked diet & allergies</div>
+          </div>
+
+          <div class="patient">
+            <div class="pfp" id="pfpInitials">—</div>
+            <div>
+              <strong id="pf_name">—</strong>
+              <div class="muted" id="pf_meta">MRN001 • Room —</div>
+            </div>
+          </div>
+
+          <div class="list" style="margin-top:14px">
+            <div class="cardish">
+              <h3>Diet orders</h3>
+              <div class="chips" id="diet_chips"><span class="chip">—</span></div>
+            </div>
+            <div class="cardish">
+              <h3>Allergies</h3>
+              <div class="chips" id="allergy_chips"><span class="chip">—</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <aside class="panel" aria-label="Dietary limits">
+        <div class="pad">
+          <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div>
+              <h2>Dietary totals & limits</h2>
+              <div class="hint">Limits from the assigned diet; totals are summed from all non-cancelled orders.</div>
+            </div>
+            <span class="pill orders mono" id="btnOrders" title="View orders">Orders</span>
+          </div>
+
+          <div class="list" id="limits_list">
+            <div class="cardish meter" data-key="cal">
+              <div class="row">
+                <div class="inline"><strong>Calories</strong><span class="muted mono" id="today_cal">—</span></div>
+                <span class="badge mono" id="badge_cal">—</span>
+              </div>
+              <div class="bar" id="bar_cal"><span></span></div>
+            </div>
+
+            <div class="cardish meter" data-key="na">
+              <div class="row">
+                <div class="inline"><strong>Sodium</strong><span class="muted mono" id="today_na">—</span></div>
+                <span class="badge mono" id="badge_na">—</span>
+              </div>
+              <div class="bar" id="bar_na"><span></span></div>
+            </div>
+
+            <div class="cardish meter" data-key="pro">
+              <div class="row">
+                <div class="inline"><strong>Protein</strong><span class="muted mono" id="today_pro">—</span></div>
+                <span class="badge mono" id="badge_pro">—</span>
+              </div>
+              <div class="bar" id="bar_pro"><span></span></div>
+            </div>
+
+            <div class="cardish meter" data-key="carb">
+              <div class="row">
+                <div class="inline"><strong>Carbohydrates</strong><span class="muted mono" id="today_carb">—</span></div>
+                <span class="badge mono" id="badge_carb">—</span>
+              </div>
+              <div class="bar" id="bar_carb"><span></span></div>
+            </div>
+
+            <div class="cardish meter" data-key="fat">
+              <div class="row">
+                <div class="inline"><strong>Fat</strong><span class="muted mono" id="today_fat">—</span></div>
+                <span class="badge mono" id="badge_fat">—</span>
+              </div>
+              <div class="bar" id="bar_fat"><span></span></div>
+            </div>
+
+            <div class="cardish meter" data-key="fluid">
+              <div class="row">
+                <div class="inline"><strong>Fluids</strong><span class="muted mono" id="today_fluid">—</span></div>
+                <span class="badge mono" id="badge_fluid">—</span>
+              </div>
+              <div class="bar" id="bar_fluid"><span></span></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Orders dialog -->
+  <dialog id="ordersDlg">
+    <div class="dlg-head">
+      <strong>All orders</strong>
+      <button class="btn ghost" id="btnCloseDlg">Close</button>
+    </div>
+    <div class="dlg-body">
+      <table class="orders" id="ordersTable">
+        <thead>
+          <tr><th style="width:120px">Order #</th><th>When</th><th>Meal</th><th>Status</th><th>Notes</th></tr>
+        </thead>
+        <tbody id="ordersTbody"><tr><td colspan="5">Loading…</td></tr></tbody>
+      </table>
+      <div id="ordersEmpty" class="muted" style="display:none;margin-top:8px">No orders to show.</div>
+    </div>
+    <div class="dlg-foot"><span class="muted mono" id="ordersCount">—</span></div>
+  </dialog>
+
+  <!-- Debug FAB + panel -->
+  <button id="fabDebug">Debug</button>
+  <section id="debug" class="debug" hidden>
+    <div class="row">
+      <h4 style="margin:0">Debug console</h4>
+      <div>
+        <button class="btn" id="dbgCopy">Copy log</button>
+        <button class="btn" id="dbgDownload">Download JSON</button>
+        <button class="btn" id="dbgClear">Clear</button>
+      </div>
+    </div>
+    <div><small id="dbgMeta">—</small></div>
+
+    <details open>
+      <summary><strong>Network history</strong> <small>(<span id="dbgNetCount">0</span>)</small></summary>
+      <div class="scroll" id="dbgNetList"></div>
+    </details>
+
+    <details>
+      <summary><strong>Payload / error history</strong> <small>(<span id="dbgDataCount">0</span>)</small></summary>
+      <div class="scroll" id="dbgDataList"></div>
+    </details>
+
+    <details>
+      <summary>Last network entry</summary>
+      <div class="scroll"><pre id="dbgNetLast">{}</pre></div>
+    </details>
+    <details>
+      <summary>Last payload / error</summary>
+      <div class="scroll"><pre id="dbgDataLast">{}</pre></div>
+    </details>
+  </section>
+
+  <script>
+    (async function(){
+      // ---------- URL params ----------
+      const params = new URLSearchParams(location.search);
+      const MRN = params.get('mrn');
+      const API_BASE = params.get('api') || '';
+      const api = p => API_BASE + p;
+
+      // ---------- Debug ----------
+      const NET_MAX = 400, netHistory=[], dataHistory=[];
+      const $ = s => document.querySelector(s);
+      const dbg = {
+        meta: $('#dbgMeta'), netLast: $('#dbgNetLast'), dataLast: $('#dbgDataLast'),
+        netList: $('#dbgNetList'), dataList: $('#dbgDataList'),
+        netCount: $('#dbgNetCount'), dataCount: $('#dbgDataCount'),
+      };
+      document.getElementById('fabDebug').onclick=()=>{ const d=$('#debug'); d.hidden=!d.hidden; };
+      $('#dbgClear').onclick=()=>{ netHistory.length=0; dataHistory.length=0; dbg.netList.innerHTML=''; dbg.dataList.innerHTML=''; dbg.netCount.textContent='0'; dbg.dataCount.textContent='0'; dbg.netLast.textContent='{}'; dbg.dataLast.textContent='{}'; };
+      $('#dbgCopy').onclick=()=>navigator.clipboard.writeText(JSON.stringify({when:new Date().toISOString(),net:netHistory,data:dataHistory},null,2));
+      $('#dbgDownload').onclick=()=>{
+        const blob=new Blob([JSON.stringify({when:new Date().toISOString(),net:netHistory,data:dataHistory},null,2)],{type:'application/json'});
+        const href=URL.createObjectURL(blob);
+        const a=document.createElement('a'); a.href=href; a.download=`debug-log-${Date.now()}.json`;
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(href),1000);
+      };
+      function pushNet(entry){ const item={at:new Date().toISOString(),...entry}; netHistory.push(item); if(netHistory.length>NET_MAX)netHistory.shift(); dbg.netCount.textContent=String(netHistory.length); dbg.netLast.textContent=JSON.stringify(item,null,2); const pre=document.createElement('pre'); pre.textContent=JSON.stringify(item,null,2); dbg.netList.appendChild(pre); dbg.meta.textContent=`last: ${new Date().toLocaleTimeString()} • ${item.method||''} ${item.url||''} • ${item.status??'—'} • ${item.ms??'?'}ms`; }
+      function pushData(label, obj){ const item={at:new Date().toISOString(),label, sample:obj}; dataHistory.push(item); if(dataHistory.length>NET_MAX)dataHistory.shift(); dbg.dataCount.textContent=String(dataHistory.length); dbg.dataLast.textContent=typeof obj==='string'?obj:JSON.stringify(item,null,2); const pre=document.createElement('pre'); pre.textContent=typeof obj==='string'?obj:JSON.stringify(item,null,2); dbg.dataList.appendChild(pre); }
+      async function safeGet(url,label){ const t=Date.now(); try{ const r=await fetch(url); pushNet({url,method:'GET',status:r.status,ms:Date.now()-t}); if(!r.ok) throw new Error(await r.text()); const data=await r.json(); pushData(label||url,data); return data; } catch(e){ pushData('ERROR '+(label||url), String(e)); throw e; } }
+
+      // ---------- Helpers ----------
+      const nf = (n)=> new Intl.NumberFormat().format(+n);
+      const fmt=(x,u)=> (x==null||isNaN(x))?'—':`${nf(x)} ${u}`;
+      const setBadge = (id,val,unit,fallback=false)=>{ const el=document.getElementById(id); if(!el) return; el.textContent=(val!=null&&!isNaN(val))?`Max ${fmt(val,unit)}`:'—'; el.title=el.textContent; el.classList.toggle('fallback', !!fallback); };
+      const setText  = (sel,txt)=>{ const el=$(sel); if(el) el.textContent=txt; };
+      const setBar   = (sel,p)=>{ const el=$(sel); if(!el) return; const v=Math.max(0,Math.min(100,p||0)); el.style.setProperty('--val',`${v}%`); el.classList.remove('ok','warn','alert'); if (v>100) el.classList.add('alert'); else if (v>=90) el.classList.add('warn'); else el.classList.add('ok'); };
+      const pct=(v,lim)=> (!lim||lim<=0)?0:(v/lim*100);
+      function setInitials(name){ const ini=(name||'').split(' ').map(x=>x[0]||'').join('').slice(0,2).toUpperCase(); $('#pfpInitials').textContent=ini||'RN'; }
+
+      // ---------- Guards ----------
+      if (!MRN){
+        $('#content').innerHTML = `<div class="cardish">Missing MRN. Try <code>?mrn=MRN001</code>.</div>`;
+        return;
+      }
+      const profileLink = document.getElementById('profileLink');
+      if (profileLink) profileLink.href = `userprofile.html?mrn=${encodeURIComponent(MRN)}${API_BASE ? `&api=${encodeURIComponent(API_BASE)}`:''}`;
+
+      // ---------- Basics ----------
+      async function loadBasics(){
+        const setBasics = (name, mrn, room)=>{ setText('#pf_name', name||'—'); setText('#pf_meta', `${mrn||'—'} • Room ${room||'—'}`); setInitials(name); };
+        try{
+          const p = await safeGet(api(`/api/profile/basic?mrn=${encodeURIComponent(MRN)}`),'profile/basic');
+          const name = p.patientName ?? p.PatientName ?? [p.firstName,p.lastName].filter(Boolean).join(' ');
+          setBasics(name, p.mrn ?? p.MRN, p.roomNumber ?? p.RoomNumber);
+        }catch{
+          try{
+            const orders = await safeGet(api(`/api/orders?mrn=${encodeURIComponent(MRN)}`),'orders (fallback basics)');
+            if (Array.isArray(orders) && orders.length){
+              const r = orders[0]; setBasics(r.patientName||r.PatientName, r.mrn||r.MRN||MRN, r.roomNumber||r.RoomNumber);
+            }else setBasics('—', MRN, '—');
+          }catch{ setBasics('—', MRN, '—'); }
+        }
+      }
+      await loadBasics();
+
+      // ---------- Allergies ----------
+      try{
+        const arr = await safeGet(api(`/api/profile/allergies?mrn=${encodeURIComponent(MRN)}`),'profile/allergies');
+        const box = document.getElementById('allergy_chips'); box.innerHTML='';
+        (arr||[]).length ? arr.forEach(a=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=a.Name ?? a.name ?? 'Allergen'; box.appendChild(s); })
+                         : box.insertAdjacentHTML('beforeend','<span class="chip">None</span>');
+      }catch{ document.getElementById('allergy_chips').innerHTML = '<span class="chip">None</span>'; }
+
+      // ---------- Active diet limits (robust + defaults) ----------
+      function pick(o, ...keys){ for (const k of keys){ if (o && k in o && o[k]!=null) return o[k]; } return null; }
+      const DEFAULTS = { cal:2000, na:2000, pro:75, fat:70, carbMeal:60, fluids:2000 }; // carb day => 180
+
+      const limits = { cal:null, na:null, pro:null, carbDay:null, fat:null, fluids:null };
+      const fallback = { cal:false, na:false, pro:false, carb:false, fat:false, fluids:false };
+
+      try{
+        const d = await safeGet(api(`/api/profile/active-diet?mrn=${encodeURIComponent(MRN)}`),'profile/active-diet');
+        const dietBox = document.getElementById('diet_chips'); dietBox.innerHTML='';
+        const chip = document.createElement('span'); chip.className='chip'; chip.textContent=d.DietName||d.dietName||d.Name||'Normal'; dietBox.appendChild(chip);
+
+        const mealsPerDay = 3;
+        limits.cal    = Number(pick(d,'CalorieLimitKCal','calorieLimitKCal','decCalorieLimitKCal','Calories','CalorieKCal')) || null;
+        limits.na     = Number(pick(d,'SodiumLimitMG','sodiumLimitMG','decSodiumLimitMG')) || null;
+        limits.pro    = Number(pick(d,'ProteinLimitG','proteinLimitG','decProteinLimitG')) || null;
+        limits.fat    = Number(pick(d,'FatLimitG','fatLimitG','decFatLimitG')) || null;
+        const carbMeal= Number(pick(d,'CarbsPerMealMax','carbsPerMealMax','decCarbsPerMealMax')) || null;
+        limits.carbDay= Number(pick(d,'CarbsPerDayMax','carbsPerDayMax')) || (carbMeal ? carbMeal * mealsPerDay : null);
+        limits.fluids = Number(pick(d,'FluidsLimitML','fluidsLimitML','intFluidsLimitML')) || null;
+
+        // Apply defaults if still missing
+        if (limits.cal==null)    { limits.cal    = DEFAULTS.cal;    fallback.cal = true; }
+        if (limits.na==null)     { limits.na     = DEFAULTS.na;     fallback.na = true; }
+        if (limits.pro==null)    { limits.pro    = DEFAULTS.pro;    fallback.pro = true; }
+        if (limits.fat==null)    { limits.fat    = DEFAULTS.fat;    fallback.fat = true; }
+        if (limits.carbDay==null){ limits.carbDay= DEFAULTS.carbMeal * 3; fallback.carb = true; }
+        if (limits.fluids==null) { limits.fluids = DEFAULTS.fluids; fallback.fluids = true; }
+
+        setBadge('badge_cal',   limits.cal,    'kcal / day', fallback.cal);
+        setBadge('badge_na',    limits.na,     'mg / day',   fallback.na);
+        setBadge('badge_pro',   limits.pro,    'g / day',    fallback.pro);
+        setBadge('badge_carb',  limits.carbDay,'g / day',    fallback.carb);
+        setBadge('badge_fat',   limits.fat,    'g / day',    fallback.fat);
+        setBadge('badge_fluid', limits.fluids, 'mL / day',   fallback.fluids);
+
+        pushData('limits (computed)', {...limits, fallback});
+      }catch{
+        document.getElementById('diet_chips').innerHTML = '<span class="chip">Normal</span>';
+        ['badge_cal','badge_na','badge_pro','badge_carb','badge_fat','badge_fluid'].forEach(id=>{ const el=document.getElementById(id); if(el){el.textContent='—'; el.title='—'; el.classList.remove('fallback');} });
+      }
+
+      // ---------- Totals from all non-cancelled orders ----------
+      document.getElementById('btnOrders').onclick = async () => { await populateOrdersTable(); document.getElementById('ordersDlg').showModal(); };
+      document.getElementById('btnCloseDlg').onclick = () => document.getElementById('ordersDlg').close();
+
+      async function aggregateAllOrders(){
+        const orders = await safeGet(api(`/api/orders?mrn=${encodeURIComponent(MRN)}`),'orders list for totals');
+        const active = (orders||[]).filter(o => (o.Status||o.status||'').toLowerCase()!=='cancelled');
+        if (!active.length) return {calories:0,sodiumMg:0,proteinG:0,carbsG:0,fatG:0,fluidsMl:0,count:0};
+
+        const details = await Promise.allSettled(active.map(o=>safeGet(api(`/api/orders/${o.OrderID??o.orderID}`),`order ${o.OrderID??o.orderID} details`)));
+        const qtyByItem = new Map();
+        details.forEach(r=>{
+          if (r.status!=='fulfilled') return;
+          (r.value.items||r.value.Items||[]).forEach(it=>{
+            const id=it.MenuItemID??it.menuItemID, qty=it.Qty??it.qty??1;
+            if(!id) return; qtyByItem.set(id,(qtyByItem.get(id)||0)+qty);
+          });
+        });
+        if (!qtyByItem.size) return {calories:0,sodiumMg:0,proteinG:0,carbsG:0,fatG:0,fluidsMl:0,count:active.length};
+
+        const ids=[...qtyByItem.keys()];
+        const infos=await Promise.allSettled(ids.map(id=>safeGet(api(`/api/menu/${id}`),`menu item ${id}`)));
+
+        const t={calories:0,sodiumMg:0,proteinG:0,carbsG:0,fatG:0,fluidsMl:0,count:active.length};
+        infos.forEach((r,i)=>{
+          if (r.status!=='fulfilled' || !r.value) return;
+          const m=r.value, q=qtyByItem.get(ids[i])||0, g=v=> (v==null||isNaN(v))?0:Number(v);
+          t.calories+=g(m.calories)*q;
+          t.sodiumMg+=g(m.sodiumMg ?? m.sodium ?? m.saltMg)*q;
+          t.proteinG+=g(m.proteinG ?? m.protein ?? m.proteinsG)*q;
+          t.carbsG  +=g(m.carbsG ?? m.carbG ?? m.carbohydratesG ?? m.carbohydrates ?? m.carb ?? m.carbs)*q; // robust
+          t.fatG    +=g(m.fatG ?? m.fat ?? m.fatsG)*q;
+          t.fluidsMl+=g(m.fluidsMl ?? m.volumeMl ?? m.fluids)*q;
+        });
+        return t;
+      }
+
+      const totals = await aggregateAllOrders();
+      pushData('totals (computed)', totals);
+
+      // ---------- Paint totals & bars ----------
+      setText('#today_cal',   `${fmt(totals.calories,'kcal')} total`);
+      setText('#today_na',    `${fmt(totals.sodiumMg,'mg')} total`);
+      setText('#today_pro',   `${fmt(totals.proteinG,'g')} total`);
+      setText('#today_carb',  `${fmt(totals.carbsG,'g')} total`);
+      setText('#today_fat',   `${fmt(totals.fatG,'g')} total`);
+      setText('#today_fluid', `${fmt(totals.fluidsMl,'mL')} total`);
+
+      setBar('#bar_cal',   pct(totals.calories, limits.cal));
+      setBar('#bar_na',    pct(totals.sodiumMg, limits.na));
+      setBar('#bar_pro',   pct(totals.proteinG, limits.pro));
+      setBar('#bar_carb',  pct(totals.carbsG,   limits.carbDay));
+      setBar('#bar_fat',   pct(totals.fatG,     limits.fat));
+      setBar('#bar_fluid', pct(totals.fluidsMl, limits.fluids));
+
+      // ---------- Orders dialog (pretty items row) ----------
+      async function populateOrdersTable(){
+        const tbody = document.getElementById('ordersTbody');
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Loading…</td></tr>`;
+        let list = [];
+        try {
+          const orders = await safeGet(api(`/api/orders?mrn=${encodeURIComponent(MRN)}`),'orders list (dialog)');
+          list = (orders||[]).filter(o => (o.Status||o.status||'').toLowerCase()!=='cancelled');
+          list.sort((a,b)=> new Date(b.placedOn||b.PlacedOn||0) - new Date(a.placedOn||a.PlacedOn||0));
+        } catch {
+          tbody.innerHTML = `<tr><td colspan="5" class="muted">Failed to load orders.</td></tr>`;
+          return;
+        }
+        document.getElementById('ordersCount').textContent = `${list.length} orders`;
+        if (!list.length){ tbody.innerHTML=''; document.getElementById('ordersEmpty').style.display='block'; return; }
+        document.getElementById('ordersEmpty').style.display='none';
+        tbody.innerHTML='';
+
+        list.forEach(o=>{
+          const id = o.orderID ?? o.OrderID;
+          const placed = o.placedOn ?? o.PlacedOn ?? o.dtmPlaced;
+          const reqFor = o.requestedFor ?? o.RequestedFor;
+          const when = placed ? new Date(placed).toLocaleString() : '—';
+          const when2= reqFor ? new Date(reqFor).toLocaleString() : '';
+          const status = (o.status ?? o.Status ?? '').toLowerCase();
+          const cls = status.includes('deliver') ? 'delivered'
+                    : status.includes('prep')    ? 'preparing'
+                    : status.includes('cancel')  ? 'cancelled' : '';
+          const meal = o.mealPeriod ?? o.MealPeriod ?? '—';
+          const notes = o.notes ?? o.Notes ?? '';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono">#${id}</td>
+            <td><div>${when}</div><div class="twoliner">${when2?`Requested: ${when2}`:''}</div></td>
+            <td>${meal}</td>
+            <td><span class="status ${cls}">${o.status || o.Status || '—'}</span></td>
+            <td>${notes||''}</td>`;
+          tbody.appendChild(tr);
+
+          // Items row (inserted below main row)
+          const itemsRow = document.createElement('tr'); itemsRow.className='itemsRow'; itemsRow.hidden = true;
+          const rowItemsId = `order-${id}-items`;
+          itemsRow.innerHTML = `<td colspan="5">
+              <div class="orderItemsBox">
+                <div class="sep"></div>
+                <div class="itemsList" id="${rowItemsId}">Loading…</div>
+                <div class="sep"></div>
+              </div>
+            </td>`;
+          tbody.appendChild(itemsRow);
+
+          // Toggle handling: click the order # cell to expand/collapse
+          tr.firstElementChild.style.cursor='pointer';
+          tr.firstElementChild.title='Show items';
+          tr.firstElementChild.addEventListener('click', async ()=>{
+            itemsRow.hidden = !itemsRow.hidden;
+            if (!itemsRow.dataset.loaded){
+              try{
+                const det = await safeGet(api(`/api/orders/${id}`), `order ${id} items`);
+                const items = det.items || det.Items || [];
+                const el = document.getElementById(rowItemsId);
+                el.innerHTML = items.length ? '' : '<div class="muted">No items.</div>';
+                items.forEach(it=>{
+                  const name = it.ItemName ?? it.itemName ?? it.MenuItemName ?? 'Item';
+                  const qty  = it.Qty ?? it.qty ?? 1;
+                  el.insertAdjacentHTML('beforeend', `<div class="itemline"><span>${name}</span><span class="qty mono">×${qty}</span></div>`);
+                });
+                itemsRow.dataset.loaded = '1';
+              }catch{
+                document.getElementById(rowItemsId).innerHTML = '<div class="muted">Failed to load items.</div>';
+              }
+            }
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

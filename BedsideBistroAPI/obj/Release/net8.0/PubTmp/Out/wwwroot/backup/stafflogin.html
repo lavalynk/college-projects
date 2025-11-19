@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Login</title>
+  
+</head>
+<body>
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+    </div>
+  </header>
+
+  <header class="site-header">
+    <div class="container site-header__bar" role="navigation" aria-label="Top">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+
+
+  <main id="content" class="center-wrap">
+    <section class="login-card" aria-label="Login">
+      <div class="login-head">
+        <div class="login-title">
+          <h1>Welcome back</h1>
+          <span class="subtle">Sign in to manage your meals</span>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sign-in type">
+          <button class="tab" role="tab" aria-disabled="true" title="Prototype">Patient</button>
+          <button class="tab" role="tab" aria-current="page">Staff</button>
+          
+        </nav>
+      </div>
+
+      <div class="login-body">
+        <!-- Left: Cheerful panel -->
+        <div class="panel hero" aria-hidden="false">
+          <div class="banner" aria-hidden="true">
+            <!-- stock greenery / salad vibe -->
+            <img src="https://images.unsplash.com/photo-1505575967455-40e256f73376?q=80&w=1600&auto=format&fit=crop" alt="Fresh greens and ingredients laid out on a table">
+          </div>
+          <div>
+            <strong>Healthy, simple, on your schedule.</strong>
+            <p class="subtle" style="margin:6px 0 0">
+              Review nutrition, set preferences, and let the kitchen know your needs — straight from your bed.
+            </p>
+          </div>
+          <div class="chip-row">
+            <span class="chip">Low-sodium highlights</span>
+            <span class="chip">Fluid tracking</span>
+            <span class="chip">Allergen alerts</span>
+            <span class="chip">Diet orders synced</span>
+          </div>
+        </div>
+
+        <!-- Right: Form -->
+        <form class="panel form" action="#" method="post" aria-label="Patient sign in (prototype)">
+            <div class="field">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" placeholder="e.g., jdoe" />
+            </div>
+
+
+            <div class="field">
+            <label for="pwd">Password</label>
+            <input id="pwd" name="pwd" type="password" autocomplete="current-password" placeholder="••••••••" />
+            </div>
+
+
+            <button class="cta" type="submit" aria-label="Sign in">Sign in</button>
+            
+
+
+          <p class="hint" style="text-align:center;margin:6px 0 0">Prototype only — form does not authenticate.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    BedsideBistro · prototype interface · no patient data stored
+  </footer>
+</body>
+</html>

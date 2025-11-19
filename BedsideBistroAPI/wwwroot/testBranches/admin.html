@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Admin</title>
+  <link rel="stylesheet" href="global.css" />
+  <style>
+    .alert{background:#ffe8e8;color:#8b0000;border:1px solid #f3c2c2;padding:.6rem .8rem;border-radius:.6rem;display:none;margin:8px 0}
+    .toast{position:fixed;right:16px;bottom:16px;padding:10px 14px;border-radius:10px;background:#111;color:#fff;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;z-index:9999}
+    .toast.show{opacity:.95;transform:translateY(0)}
+    .debug-badge{font:12px/1.2 monospace;padding:2px 6px;border-radius:999px;background:#eef;color:#334;display:inline-block}
+    .mono-small{font:12px/1.2 monospace}
+    .row-gap{display:flex;gap:.5rem;flex-wrap:wrap}
+    .btn-xs{padding:.3rem .5rem;border-radius:.5rem}
+    .pill-ok{background:#e8ffe8;border:1px solid #c6efc6;color:#1e7e1e;border-radius:999px;padding:.1rem .5rem}
+    .pill-bad{background:#ffe8e8;border:1px solid #f3c2c2;color:#8b0000;border-radius:999px;padding:.1rem .5rem}
+    dialog.modal{max-width:96vw}
+    .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .list .cell{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border:1px solid #eee;border-radius:12px;margin:.4rem 0}
+    .list .name{font-weight:600}
+    .list .right{display:flex;gap:.5rem}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+  </style>
+</head>
+<body class="admin">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <header>
+    <div class="container nav">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span class="brand">BedsideBistro • Admin</span>
+
+      <div class="profile" style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
+        <div class="avatar" aria-hidden="true">👤</div>
+        <div>
+          <div id="whoami" style="font-weight:700;">Admin</div>
+          <div class="hint" id="whoamiRole">role</div>
+        </div>
+        <button id="logoutBtn" class="ghost" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="content" class="container" style="padding:12px 0 24px">
+    <div class="tabs" role="tablist" aria-label="Admin Sections">
+      <button class="tab" id="tabStaff" type="button" role="tab" aria-controls="panelStaff" aria-current="page">Staff</button>
+      <button class="tab" id="tabIngr"  type="button" role="tab" aria-controls="panelIngr">Ingredients</button>
+      <button class="tab" id="tabMenu"  type="button" role="tab" aria-controls="panelMenu">Menu Items</button>
+      <button class="tab" id="tabInv"   type="button" role="tab" aria-controls="panelInv">Inventory</button>
+      <button class="tab" id="tabTests" type="button" role="tab" aria-controls="panelTests">Tests</button>
+    </div>
+
+    <div id="alert" class="alert" role="alert"></div>
+
+    <!-- STAFF -->
+    <section id="panelStaff" role="tabpanel" class="panel pad" aria-labelledby="tabStaff">
+      <div class="section-head">
+        <h2>Staff (Nurses & Admins)</h2>
+        <div class="toolbar row-gap">
+          <button class="ghost success" id="btnNewUser" type="button">+ New User</button>
+          <span class="hint">Manage user accounts.</span>
+        </div>
+      </div>
+      <div id="userList" class="list" aria-live="polite"></div>
+
+      <dialog id="userDialog" class="modal" style="border:0; width:min(700px,96vw); border-radius:18px;">
+        <form class="pad form" id="userForm" novalidate>
+          <div class="head">
+            <h3 id="userFormTitle" style="margin:0">New User</h3>
+            <button class="ghost" id="userCloseBtn" type="button">Close</button>
+          </div>
+
+          <div class="grid2">
+            <label><strong>Username</strong><input class="input" id="f_userName" autocomplete="off" required /></label>
+            <label><strong>Display name</strong><input class="input" id="f_displayName" autocomplete="off" required /></label>
+            <label>
+              <strong>Role</strong>
+              <select class="select" id="f_role">
+                <option value="Nurse">Nurse</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </label>
+            <label><strong>Password (shown)</strong><input class="input" id="f_password" type="text" autocomplete="off" /></label>
+          </div>
+
+          <div class="rowline">
+            <label style="display:flex;align-items:center;gap:.5rem">
+              <input type="checkbox" id="f_active" checked />
+              <span>Active</span>
+            </label>
+          </div>
+
+          <div class="row" style="justify-content:flex-end">
+            <button class="ghost" id="userCancelBtn" type="button">Cancel</button>
+            <button class="btn primary" id="userSaveBtn" type="submit">Save</button>
+          </div>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- INGREDIENTS -->
+    <section id="panelIngr" role="tabpanel" class="panel pad" aria-labelledby="tabIngr" hidden>
+      <div class="section-head">
+        <h2>Ingredients</h2>
+        <div class="toolbar row-gap">
+          <button class="ghost success" id="btnNewIngr" type="button">+ New Ingredient</button>
+          <span class="hint">Add ingredients (Name + Quantity). Modify only renames; delete removes the record.</span>
+        </div>
+      </div>
+      <div id="ingrList" class="list"></div>
+
+      <dialog id="ingrCreateDialog" class="modal" style="border:0; width:min(640px,96vw); border-radius:18px;">
+        <form class="pad form" id="ingrCreateForm" novalidate>
+          <div class="head">
+            <h3 style="margin:0">Add Ingredient</h3>
+            <button class="ghost" id="ingrCreateClose" type="button">Close</button>
+          </div>
+          <div class="grid2">
+            <label><strong>Name</strong><input class="input" id="i_name" required /></label>
+            <label><strong>Quantity on Hand</strong><input class="input" id="i_qty" type="number" inputmode="numeric" min="0" step="1" required /></label>
+          </div>
+          <div class="row" style="justify-content:flex-end">
+            <button class="ghost" id="ingrCreateCancel" type="button">Cancel</button>
+            <button class="btn primary" type="submit">Save</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="ingrRenameDialog" class="modal" style="border:0; width:min(520px,96vw); border-radius:18px;">
+        <form class="pad form" id="ingrRenameForm" novalidate>
+          <div class="head">
+            <h3 style="margin:0">Rename Ingredient</h3>
+            <button class="ghost" id="ingrRenameClose" type="button">Close</button>
+          </div>
+          <label><strong>New name</strong><input class="input" id="i_newname" required /></label>
+          <div class="row" style="justify-content:flex-end">
+            <button class="ghost" id="ingrRenameCancel" type="button">Cancel</button>
+            <button class="btn primary" type="submit">Save</button>
+          </div>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- MENU ITEMS -->
+    <section id="panelMenu" role="tabpanel" class="panel pad" aria-labelledby="tabMenu" hidden>
+      <div class="section-head">
+        <h2>Menu Items</h2>
+        <div class="toolbar row-gap">
+          <button class="ghost success" id="btnNewItem" type="button">+ New Item</button>
+          <span class="hint">Create or edit items, attach up to 6 ingredients, upload an image.</span>
+        </div>
+      </div>
+
+      <div id="itemList" class="list" aria-live="polite"></div>
+
+      <dialog id="itemDialog" class="modal" style="border:0; width:min(920px,96vw); border-radius:18px;">
+        <form class="pad form" id="itemForm" novalidate>
+          <div class="head">
+            <h3 id="itemFormTitle" style="margin:0">New Menu Item</h3>
+            <button class="ghost" id="itemCloseBtn" type="button">Close</button>
+          </div>
+
+          <div class="grid3">
+            <label><strong>Name</strong><input class="input" id="m_name" required /></label>
+            <label>
+              <strong>Category (Meal Period)</strong>
+              <select class="select" id="m_meal" required><option value="">Loading…</option></select>
+            </label>
+            <label>
+              <strong>Image</strong>
+              <input class="input" id="m_imgFile" type="file" accept="image/*" />
+              <input id="m_imgPath" type="hidden" />
+              <div class="hint" id="m_imgHint">No file chosen.</div>
+            </label>
+          </div>
+
+          <div class="grid3">
+            <label><strong>Calories</strong><input class="input" id="m_cal" type="number" step="0.01" /></label>
+            <label><strong>Sodium (mg)</strong><input class="input" id="m_sod" type="number" step="0.01" /></label>
+            <label><strong>Protein (g)</strong><input class="input" id="m_pro" type="number" step="0.01" /></label>
+          </div>
+          <div class="grid3">
+            <label><strong>Carbs (g)</strong><input class="input" id="m_car" type="number" step="0.01" /></label>
+            <label><strong>Fat (g)</strong><input class="input" id="m_fat" type="number" step="0.01" /></label>
+            <label><strong>Low sodium?</strong>
+              <select class="select" id="m_low"><option value="0">No</option><option value="1">Yes</option></select>
+            </label>
+          </div>
+
+          <fieldset style="margin-top:.6rem">
+            <legend><strong>Ingredients (pick up to 6)</strong></legend>
+            <div class="row" style="align-items:center; gap:.8rem; margin:.2rem 0 .6rem">
+              <input id="m_ingrSearch" class="input" placeholder="Search ingredients..." style="max-width:240px" />
+              <span class="hint">Selected: <span id="m_ingrCount">0</span>/6</span>
+              <button class="ghost btn-xs" type="button" id="m_ingrClear">Clear</button>
+            </div>
+            <div id="m_ingrBox" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.25rem;max-height:260px;overflow:auto;border:1px solid #eee;border-radius:10px;padding:.5rem"></div>
+          </fieldset>
+
+          <div class="row" style="justify-content:flex-end">
+            <button class="ghost" id="itemCancelBtn" type="button">Cancel</button>
+            <button class="btn primary" id="itemSaveBtn" type="submit">Save</button>
+          </div>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- INVENTORY -->
+    <section id="panelInv" role="tabpanel" class="panel pad" aria-labelledby="tabInv" hidden>
+      <div class="section-head">
+        <h2>Inventory</h2>
+        <div class="toolbar row-gap">
+          <button class="ghost" id="btnRefreshInv" type="button">Refresh</button>
+          <span class="hint">Pulls GET /api/inventory (or shows a helpful message if not implemented).</span>
+        </div>
+      </div>
+      <div id="invList" class="list"></div>
+    </section>
+
+    <!-- TESTS -->
+    <section id="panelTests" role="tabpanel" class="panel pad" aria-labelledby="tabTests" hidden>
+      <div class="section-head">
+        <h2>API Tests</h2>
+        <div class="toolbar row-gap">
+          <button class="ghost btn-xs" id="btnTestHealth" type="button">GET /health</button>
+          <button class="ghost btn-xs" id="btnTestDb"     type="button">GET /dbcheck</button>
+          <button class="ghost btn-xs" id="btnTestUsers"  type="button">GET /api/users</button>
+          <button class="ghost btn-xs" id="btnTestIngr"   type="button">GET /api/ingredients</button>
+          <button class="ghost btn-xs" id="btnTestMenu"   type="button">GET /api/menu</button>
+          <button class="ghost btn-xs" id="btnTestInv"    type="button">GET /api/inventory</button>
+        </div>
+      </div>
+      <div class="hint">Use these to quickly see what the API returns. Details appear in the debug console below.</div>
+    </section>
+
+    <!-- DEBUG -->
+    <section class="panel pad" style="margin-top:12px;">
+      <details open>
+        <summary>Debug console <span class="debug-badge" id="dbgCount">0</span></summary>
+        <div class="mono-small" id="dbg"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer>BedsideBistro • admin tools</footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (function(){
+    // ---------- ENDPOINTS ----------
+    const API = {
+      users: {
+        list:   '/api/users',
+        create: '/api/users',
+        update: id => `/api/users/${id}`,
+        del:    id => `/api/users/${id}?softDelete=false`,
+        edit:   id => `/api/users/${id}/edit`
+      },
+      ingredients: {
+        list:   '/api/ingredients',
+        create: '/api/ingredients',
+        update: id => `/api/ingredients/${id}`,
+        del:    id => `/api/ingredients/${id}`
+      },
+      items: {
+        list: '/api/menu',
+        create: '/api/menu',
+        get:    id => `/api/menu/${id}`,            // returns flat item + ingredientIds
+        update: id => `/api/menu/${id}`,            // PUT (if implemented)
+        del:    id => `/api/menu/${id}`,            // DELETE (if implemented)
+        attachIngredients: id => `/api/menu/${id}/ingredients`
+      },
+      mealPeriods: { list: '/api/mealperiods' },
+      inventory:   { list: '/api/inventory' },
+      misc:        { health: '/health', db: '/dbcheck' }
+    };
+    const UPLOAD_URL = '/api/uploads/food-images';
+
+    // ---------- SESSION ----------
+    const me   = JSON.parse(sessionStorage.getItem('user') || 'null');
+    const name = me?.userName ?? me?.UserName ?? '';
+    const role = (me?.role ?? me?.Role ?? '').toLowerCase();
+    document.getElementById('whoami').textContent = name || 'Admin';
+    document.getElementById('whoamiRole').textContent = role || 'admin';
+    document.getElementById('logoutBtn').addEventListener('click',()=>{ sessionStorage.clear(); location.replace('/index.html'); });
+
+    // ---------- UI helpers ----------
+    const alertEl = document.getElementById('alert');
+    const toastEl = document.getElementById('toast');
+    const dbgEl   = document.getElementById('dbg');
+    const dbgCount= document.getElementById('dbgCount');
+    const logs    = [];
+    const q = (sel,root=document)=>root.querySelector(sel);
+
+    function showAlert(msg){ alertEl.textContent=msg; alertEl.style.display='block'; }
+    function hideAlert(){ alertEl.style.display='none'; alertEl.textContent=''; }
+    function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function logLine(entry){
+      logs.push(entry); if (logs.length>100) logs.shift();
+      dbgEl.innerHTML = logs.map(e=>{
+        const t=new Date(e.t).toLocaleTimeString();
+        const status=e.ok?`<span class="pill-ok">${e.status}</span>`:`<span class="pill-bad">${e.status}</span>`;
+        const body=e.resBody?`<pre>${escapeHtml(e.resBody)}</pre>`:'';
+        return `<div style="margin:.4rem 0">
+          <div><strong>${t}</strong> • <code>${e.method}</code> <code>${e.url}</code> → ${status}</div>
+          ${e.reqBody?`<div>req: <code>${escapeHtml(e.reqBody)}</code></div>`:''}
+          ${body}
+        </div>`;
+      }).join('');
+      dbgCount.textContent=String(logs.length);
+    }
+
+    async function apiFetch(url, options={}){
+      hideAlert();
+      const method=(options.method||'GET').toUpperCase();
+      const reqBody=options.body||null;
+      let res,text;
+      try{ res=await fetch(url,options); }
+      catch(err){ logLine({t:Date.now(),url,method,status:'NETWORK',ok:false,reqBody}); showAlert(`Network error calling ${method} ${url}.`); throw err; }
+      const ct=res.headers.get('content-type')||'';
+      if(res.status!==204){ try{text=await res.text();}catch{ text=''; } }
+      logLine({t:Date.now(),url,method,status:res.status,ok:res.ok,reqBody,resBody:text});
+      if(!res.ok){
+        let msg=`API error ${res.status} on ${method} ${url}`;
+        if(ct.includes('application/json')){ try{ const j=JSON.parse(text); if(j?.error) msg+=` — ${j.error}`; if(j?.message) msg+=` — ${j.message}`; }catch{} }
+        else if(text){ msg+=` — ${text.substring(0,200)}`; }
+        showAlert(msg); throw new Error(msg);
+      }
+      if(res.status===204) return null;
+      if(ct.includes('application/json')){ try{return JSON.parse(text);}catch{return null;} }
+      return text||null;
+    }
+
+    // ---------- Tabs ----------
+    const tabs=[
+      {btn:'tabStaff', panel:'panelStaff', loader: loadUsers},
+      {btn:'tabIngr',  panel:'panelIngr',  loader: loadIngredients},
+      {btn:'tabMenu',  panel:'panelMenu',  loader: loadItems},
+      {btn:'tabInv',   panel:'panelInv',   loader: loadInventory},
+      {btn:'tabTests', panel:'panelTests', loader: null}
+    ];
+    function showTab(key){
+      tabs.forEach(t=>{
+        const is = t.btn === key;
+        document.getElementById(t.btn).setAttribute('aria-current', is ? 'page' : '');
+        document.getElementById(t.panel).hidden = !is;
+      });
+      const tab = tabs.find(t=>t.btn===key);
+      if (tab?.loader) tab.loader();
+    }
+    tabs.forEach(t => document.getElementById(t.btn).addEventListener('click', e => { e.preventDefault(); showTab(t.btn); }));
+
+    // ---------- STAFF ----------
+    let editingUserId=null;
+    let originalPassword=null;
+
+    async function loadUsers(){
+      const list=document.getElementById('userList');
+      list.innerHTML='<div class="hint">Loading…</div>';
+      try{
+        const users=await apiFetch(API.users.list);
+        list.innerHTML='';
+        if(!Array.isArray(users)||users.length===0){ list.innerHTML='<div class="hint">No users found. Create one to begin.</div>'; return; }
+        users.forEach(u=>list.appendChild(renderUserRow(u)));
+      }catch{ list.innerHTML='<div class="hint">Failed to load users (see Debug console).</div>'; }
+    }
+
+    function renderUserRow(u){
+      const id=u.intUserID??u.id??u.Id;
+      const usr=u.strUserName??u.userName??u.UserName;
+      const row=document.createElement('div'); row.className='cell';
+      const name=document.createElement('div'); name.className='name mono'; name.textContent=usr;
+      const actions=document.createElement('div'); actions.className='right';
+      const btnEdit=Object.assign(document.createElement('button'),{className:'ghost',type:'button',textContent:'Modify'});
+      const btnDel =Object.assign(document.createElement('button'),{className:'ghost danger',type:'button',textContent:'Delete'});
+      actions.append(btnEdit,btnDel);
+
+      btnEdit.addEventListener('click',()=>openUserForm(u));
+      btnDel.addEventListener('click',async()=>{
+        if(!id) return;
+        const ok=confirm(`Permanently delete user "${usr}"? This cannot be undone.`);
+        if(!ok) return;
+        try{
+          await apiFetch(API.users.del(id),{method:'DELETE'});
+          toast('User deleted');
+          loadUsers();
+        }catch{}
+      });
+
+      row.append(name,actions);
+      return row;
+    }
+
+    const userDlg  = document.getElementById('userDialog');
+    const userForm = document.getElementById('userForm');
+    document.getElementById('btnNewUser').addEventListener('click',()=>openUserForm(null));
+    document.getElementById('userCloseBtn').addEventListener('click',()=>userDlg.close());
+    document.getElementById('userCancelBtn').addEventListener('click',()=>userDlg.close());
+
+    function openUserForm(u){
+      editingUserId = u ? (u.intUserID ?? u.id ?? u.Id) : null;
+      q('#userFormTitle').textContent = editingUserId ? 'Edit User' : 'New User';
+      q('#f_userName').value    = u?.strUserName    ?? u?.userName    ?? u?.UserName    ?? '';
+      q('#f_displayName').value = u?.strDisplayName ?? u?.displayName ?? u?.DisplayName ?? '';
+      q('#f_role').value        = u?.strRole        ?? u?.role        ?? u?.Role        ?? 'Nurse';
+      q('#f_active').checked    = (u?.bitIsActive   ?? u?.isActive    ?? u?.IsActive ?? 1) ? true : false;
+      q('#f_password').value    = '';
+      originalPassword = null;
+
+      if (!editingUserId) { userDlg.showModal(); return; }
+
+      apiFetch(API.users.edit(editingUserId))
+        .then(full=>{
+          q('#f_userName').value    = full.userName    ?? full.UserName    ?? '';
+          q('#f_displayName').value = full.displayName ?? full.DisplayName ?? '';
+          q('#f_role').value        = full.role        ?? full.Role        ?? 'Nurse';
+          q('#f_active').checked    = (full.isActive   ?? full.IsActive ?? true) ? true : false;
+          const pwd = full.password ?? full.Password ?? '';
+          originalPassword = pwd;
+          q('#f_password').value = pwd;
+        })
+        .catch(()=>{})
+        .finally(()=>userDlg.showModal());
+    }
+
+    userForm.addEventListener('submit',async(e)=>{
+      e.preventDefault();
+      const enteredPassword=q('#f_password').value;
+      const payload={
+        UserName:    q('#f_userName').value.trim(),
+        DisplayName: q('#f_displayName').value.trim(),
+        Role:        q('#f_role').value,
+        Password:    enteredPassword || null,
+        IsActive:    q('#f_active').checked
+      };
+      try{
+        if(editingUserId){
+          await apiFetch(API.users.update(editingUserId),{
+            method:'PUT',
+            headers:{'Content-Type':'application/json','Accept':'application/json'},
+            body:JSON.stringify(payload)
+          });
+          toast('User saved');
+        }else{
+          await apiFetch(API.users.create,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Accept':'application/json'},
+            body:JSON.stringify({
+              UserName:payload.UserName,
+              DisplayName:payload.DisplayName,
+              Role:payload.Role,
+              Password:enteredPassword || 'password123',
+              IsActive:payload.IsActive
+            })
+          });
+          toast('User created');
+        }
+        userDlg.close();
+        loadUsers();
+      }catch{}
+    });
+
+    // ---------- INGREDIENTS ----------
+    let renameId = null;
+
+    async function loadIngredients(){
+      const list=document.getElementById('ingrList');
+      list.innerHTML='<div class="hint">Loading…</div>';
+      try{
+        const data=await apiFetch(API.ingredients.list);
+        list.innerHTML='';
+        if(!Array.isArray(data)||data.length===0){ list.innerHTML='<div class="hint">No ingredients found. Add one to begin.</div>'; return; }
+        data.forEach(g=>list.appendChild(renderIngrRow(g)));
+      }catch{ list.innerHTML='<div class="hint">Failed to load ingredients (see Debug console).</div>'; }
+    }
+
+    function getIngrId(o){ return o.intIngredientID ?? o.Id ?? o.id; }
+    function getIngrName(o){ return o.strIngredient ?? o.strIngredientName ?? o.Name ?? o.name; }
+    function getIngrQty(o){ return o.intQty ?? o.Quantity ?? o.quantity ?? null; }
+
+    function renderIngrRow(g){
+      const id   = getIngrId(g);
+      const name = getIngrName(g);
+      const qty  = getIngrQty(g);
+
+      const row  = document.createElement('div'); row.className='cell';
+      const left = document.createElement('div');
+      left.innerHTML = `<div class="name">${name}</div><div class="hint">${qty!=null?`Qty: ${qty}`:''}</div>`;
+
+      const actions = document.createElement('div'); actions.className='right';
+      const btnEdit = Object.assign(document.createElement('button'), { className:'ghost', type:'button', textContent:'Modify' });
+      const btnDel  = Object.assign(document.createElement('button'), { className:'ghost danger', type:'button', textContent:'Delete' });
+      actions.append(btnEdit, btnDel);
+
+      btnEdit.addEventListener('click', () => {
+        renameId = id;
+        q('#i_newname').value = name || '';
+        ingrRenameDlg.showModal();
+      });
+
+      btnDel.addEventListener('click', async () => {
+        if (!id) return;
+        const ok = confirm(`Delete ingredient "${name}"? This cannot be undone.`);
+        if (!ok) return;
+        try{
+          await apiFetch(API.ingredients.del(id), { method:'DELETE' });
+          toast('Ingredient deleted');
+          loadIngredients();
+        }catch{}
+      });
+
+      row.append(left, actions);
+      return row;
+    }
+
+    const ingrCreateDlg  = document.getElementById('ingrCreateDialog');
+    const ingrCreateForm = document.getElementById('ingrCreateForm');
+    document.getElementById('btnNewIngr').addEventListener('click', () => {
+      q('#i_name').value = ''; q('#i_qty').value  = '';
+      ingrCreateDlg.showModal();
+    });
+    document.getElementById('ingrCreateClose').addEventListener('click', ()=>ingrCreateDlg.close());
+    document.getElementById('ingrCreateCancel').addEventListener('click',()=>ingrCreateDlg.close());
+
+    ingrCreateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = q('#i_name').value.trim();
+      const qty  = q('#i_qty').value.trim();
+      if (!name) { showAlert('Name is required.'); return; }
+      if (qty === '' || isNaN(+qty) || +qty < 0) { showAlert('Quantity must be 0 or greater.'); return; }
+
+      try{
+        await apiFetch(API.ingredients.create, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({ Name: name, Quantity: Number(qty) })
+        });
+        toast('Ingredient added');
+        ingrCreateDlg.close();
+        loadIngredients();
+      }catch{}
+    });
+
+    const ingrRenameDlg  = document.getElementById('ingrRenameDialog');
+    const ingrRenameForm = document.getElementById('ingrRenameForm');
+    document.getElementById('ingrRenameClose').addEventListener('click', ()=>ingrRenameDlg.close());
+    document.getElementById('ingrRenameCancel').addEventListener('click',()=>ingrRenameDlg.close());
+
+    ingrRenameForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newName = q('#i_newname').value.trim();
+      if (!newName) { showAlert('New name is required.'); return; }
+      if (!renameId) { showAlert('No ingredient selected.'); return; }
+
+      try{
+        await apiFetch(API.ingredients.update(renameId), {
+          method:'PUT',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({ Name: newName })
+        });
+        toast('Ingredient renamed');
+        ingrRenameDlg.close();
+        renameId = null;
+        loadIngredients();
+      }catch{}
+    });
+
+    // ---------- MENU ITEMS ----------
+    let menu_editingItemId = null;
+    let menu_allIngredients = [];
+    let menu_mealPeriods = [];
+    let menu_selectedIngredientIds = new Set();
+
+    async function loadItems(){
+      const list = document.getElementById('itemList');
+      list.innerHTML = '<div class="hint">Loading…</div>';
+      try{
+        const data = await apiFetch(API.items.list);
+        list.innerHTML = '';
+        if (!Array.isArray(data) || data.length === 0) {
+          list.innerHTML = '<div class="hint">No menu items found.</div>';
+          return;
+        }
+        data.forEach(m => list.appendChild(renderItemRow(m)));
+      }catch{
+        list.innerHTML = '<div class="hint">Failed to load items (see Debug console).</div>';
+      }
+    }
+
+    function renderItemRow(m){
+      const id = m.intMenuItemID ?? m.id ?? m.Id;
+      const nm = m.strItemName ?? m.name ?? m.Name ?? '(unnamed)';
+
+      const row = document.createElement('div'); row.className = 'cell';
+      const left = document.createElement('div'); left.innerHTML = `<div class="name">${nm}</div>`;
+
+      const actions = document.createElement('div'); actions.className = 'right';
+      const btnEdit = Object.assign(document.createElement('button'), { className:'ghost', type:'button', textContent:'Modify' });
+      const btnDel  = Object.assign(document.createElement('button'), { className:'ghost danger', type:'button', textContent:'Delete' });
+
+      btnEdit.addEventListener('click', async () => { await openItemForm(id); });
+      btnDel.addEventListener('click', async () => {
+        if (!id) return;
+        const ok = confirm(`Permanently delete "${nm}"? This cannot be undone.`);
+        if (!ok) return;
+        try{
+          await apiFetch(API.items.del(id), { method:'DELETE' });
+          toast('Item deleted');
+          loadItems();
+        }catch{}
+      });
+
+      actions.append(btnEdit, btnDel);
+      row.append(left, actions);
+      return row;
+    }
+
+    const itemDlg  = document.getElementById('itemDialog');
+    const itemForm = document.getElementById('itemForm');
+    document.getElementById('btnNewItem').addEventListener('click', () => openItemForm(null));
+    document.getElementById('itemCloseBtn').addEventListener('click', () => itemDlg.close());
+    document.getElementById('itemCancelBtn').addEventListener('click', () => itemDlg.close());
+
+    const m_ingrBox      = document.getElementById('m_ingrBox');
+    const m_ingrSearch   = document.getElementById('m_ingrSearch');
+    const m_ingrClearBtn = document.getElementById('m_ingrClear');
+    const m_ingrCount    = document.getElementById('m_ingrCount');
+    const m_mealSel      = document.getElementById('m_meal');
+
+    const m_imgFile  = document.getElementById('m_imgFile');
+    const m_imgPath  = document.getElementById('m_imgPath');
+    const m_imgHint  = document.getElementById('m_imgHint');
+
+    m_imgFile.addEventListener('change', () => {
+      const f = m_imgFile.files?.[0];
+      m_imgHint.textContent = f ? `Selected: ${f.name}` : 'No file chosen.';
+    });
+
+    async function openItemForm(itemId){
+      menu_editingItemId = itemId ?? null;
+      q('#itemFormTitle').textContent = menu_editingItemId ? 'Edit Menu Item' : 'New Menu Item';
+
+      // reset
+      q('#m_name').value = '';
+      ['m_cal','m_sod','m_pro','m_car','m_fat'].forEach(id=>q('#'+id).value='');
+      q('#m_low').value = '0';
+      m_imgFile.value = ''; m_imgPath.value = ''; m_imgHint.textContent = 'No file chosen.';
+      menu_selectedIngredientIds.clear(); m_ingrCount.textContent = '0';
+
+      await Promise.all([ensureMealPeriodsLoaded(), ensureMenuIngredientsLoaded()]);
+
+      if (menu_editingItemId) {
+        try{
+          const data = await apiFetch(API.items.get(menu_editingItemId));
+          q('#m_name').value = data.name ?? '';
+          q('#m_cal').value  = data.calories  ?? '';
+          q('#m_sod').value  = data.sodiumMg  ?? '';
+          q('#m_pro').value  = data.proteinG  ?? '';
+          q('#m_car').value  = data.carbsG    ?? '';
+          q('#m_fat').value  = data.fatG      ?? '';
+          q('#m_low').value  = data.lowSodium ? '1' : '0';
+          if (data.mealPeriodId) m_mealSel.value = String(data.mealPeriodId);
+          if (data.imagePath) { m_imgPath.value = data.imagePath; m_imgHint.textContent = `Current: ${data.imagePath}`; }
+          menu_selectedIngredientIds.clear();
+          (data.ingredientIds ?? []).slice(0,6).forEach(id => menu_selectedIngredientIds.add(Number(id)));
+          renderMenuIngredientPicker();
+        }catch{}
+      }
+
+      itemDlg.showModal();
+    }
+
+    async function ensureMealPeriodsLoaded(){
+      if (menu_mealPeriods.length) return;
+      try{ menu_mealPeriods = await apiFetch(API.mealPeriods.list); }catch{ menu_mealPeriods = []; }
+      renderMealPeriods();
+    }
+    function renderMealPeriods(){
+      m_mealSel.innerHTML = '';
+      if (!menu_mealPeriods.length) { m_mealSel.innerHTML = '<option value="">(no meal periods found)</option>'; return; }
+      m_mealSel.appendChild(new Option('Select…', ''));
+      menu_mealPeriods.forEach(mp => {
+        const id = mp.Id ?? mp.id ?? mp.intMealPeriodID;
+        const nm = mp.Name ?? mp.name ?? mp.strMealPeriod ?? 'Meal Period';
+        m_mealSel.appendChild(new Option(nm, id));
+      });
+    }
+
+    async function ensureMenuIngredientsLoaded(){
+      if (!menu_allIngredients.length) {
+        try{ menu_allIngredients = await apiFetch(API.ingredients.list); }catch{ menu_allIngredients = []; }
+      }
+      renderMenuIngredientPicker();
+    }
+    function renderMenuIngredientPicker(){
+      const term = (m_ingrSearch.value || '').toLowerCase();
+      const filtered = term
+        ? menu_allIngredients.filter(g => (g.Name ?? g.name ?? g.strIngredient ?? '').toLowerCase().includes(term))
+        : menu_allIngredients;
+
+      m_ingrBox.innerHTML = '';
+      filtered.forEach(g => {
+        const id = g.Id ?? g.id ?? g.intIngredientID;
+        const name = g.Name ?? g.name ?? g.strIngredient ?? 'Ingredient';
+
+        const wrap = document.createElement('label');
+        wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='.5rem';
+        wrap.style.padding='.25rem .35rem'; wrap.style.borderRadius='8px';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = String(id);
+        cb.checked = menu_selectedIngredientIds.has(Number(id));
+        cb.addEventListener('change', () => {
+          const n = Number(id);
+          if (cb.checked) {
+            if (menu_selectedIngredientIds.size >= 6) { cb.checked=false; showAlert('You can select at most 6 ingredients.'); return; }
+            menu_selectedIngredientIds.add(n);
+          } else {
+            menu_selectedIngredientIds.delete(n);
+          }
+          updateMenuIngrCountAndDisable();
+        });
+
+        const span = document.createElement('span'); span.textContent = name;
+        wrap.append(cb, span);
+        m_ingrBox.appendChild(wrap);
+      });
+
+      updateMenuIngrCountAndDisable();
+    }
+    function updateMenuIngrCountAndDisable(){
+      m_ingrCount.textContent = String(menu_selectedIngredientIds.size);
+      const maxed = menu_selectedIngredientIds.size >= 6;
+      m_ingrBox.querySelectorAll('input[type=checkbox]').forEach(cb => { if (!cb.checked) cb.disabled = maxed; });
+    }
+    m_ingrSearch.addEventListener('input', renderMenuIngredientPicker);
+    m_ingrClearBtn.addEventListener('click', () => { menu_selectedIngredientIds.clear(); renderMenuIngredientPicker(); });
+
+    // Upload helper accepts { url } or { path }
+    async function menu_maybeUploadImage(){
+      const file = m_imgFile.files?.[0];
+      if (!file) return m_imgPath.value || null;
+      const fd = new FormData(); fd.append('file', file);
+      try{
+        const res = await fetch(UPLOAD_URL, { method:'POST', body: fd });
+        const text = await res.text();
+        logLine({ t:Date.now(), url:UPLOAD_URL, method:'POST', status:res.status, ok:res.ok, reqBody:'[FormData:file]', resBody:text });
+        if (!res.ok) { showAlert(`Image upload failed (${res.status}).`); throw new Error('upload failed'); }
+        let json={}; try{ json = JSON.parse(text); }catch{}
+        const serverPath = json.url || json.Url || json.path || json.Path || null;
+        if (!serverPath) { showAlert('Upload succeeded but no path returned from server.'); return null; }
+        m_imgPath.value = serverPath; m_imgHint.textContent = `Uploaded: ${serverPath}`;
+        return serverPath;
+      }catch(err){ throw err; }
+    }
+
+    itemForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      let imagePath = null;
+      try{ imagePath = await menu_maybeUploadImage(); }catch{ return; }
+
+      const mealText = m_mealSel.options[m_mealSel.selectedIndex]?.text?.trim() || null;
+      const mealId   = m_mealSel.value ? Number(m_mealSel.value) : null;
+
+      const payload = {
+        ItemName:     q('#m_name').value.trim(),
+        Category:     mealText || "Other",
+        MealPeriodID: mealId,
+        Calories:     q('#m_cal').value === '' ? null : Number(q('#m_cal').value),
+        SodiumMG:     q('#m_sod').value === '' ? null : Number(q('#m_sod').value),
+        ProteinG:     q('#m_pro').value === '' ? null : Number(q('#m_pro').value),
+        CarbsG:       q('#m_car').value === '' ? null : Number(q('#m_car').value),
+        FatG:         q('#m_fat').value === '' ? null : Number(q('#m_fat').value),
+        LowSodium:    q('#m_low').value === '1',
+        IsActive:     true,
+        ImagePath:    imagePath || (m_imgPath.value || null),
+        CreatedBy:    null
+      };
+
+      if (!payload.ItemName)     { showAlert('Name is required.'); return; }
+      if (!payload.MealPeriodID) { showAlert('Category (Meal Period) is required.'); return; }
+
+      try{
+        let itemId = menu_editingItemId;
+        if (menu_editingItemId) {
+          await apiFetch(API.items.update(menu_editingItemId), {
+            method:'PUT',
+            headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          const created = await apiFetch(API.items.create, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+            body: JSON.stringify(payload)
+          });
+          itemId = created?.Id ?? created?.intMenuItemID ?? created?.id;
+        }
+
+        if (itemId) {
+          const ids = Array.from(menu_selectedIngredientIds);
+          await apiFetch(API.items.attachIngredients(itemId), {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+            body: JSON.stringify({ ingredientIds: ids }) // << correct casing
+          });
+        }
+
+        toast('Menu item saved');
+        itemDlg.close();
+        loadItems();
+      }catch{}
+    });
+
+    // ---------- INVENTORY ----------
+    async function loadInventory(){
+      const list=document.getElementById('invList');
+      list.innerHTML='<div class="hint">Loading…</div>';
+      try{
+        const data=await apiFetch(API.inventory.list);
+        list.innerHTML='';
+        if(!Array.isArray(data)||data.length===0){ list.innerHTML='<div class="hint">No inventory records found.</div>'; return; }
+        data.forEach(r=>list.appendChild(renderInvRow(r)));
+      }catch{
+        list.innerHTML = `<div class="hint">/api/inventory is not available yet or failed. You can wire it later — this tab will start working automatically.</div>`;
+      }
+    }
+    function renderInvRow(r){
+      const cell=document.createElement('div'); cell.className='cell';
+      const id = r.id ?? r.Id ?? r.intInventoryID ?? '—';
+      const name = r.name ?? r.Name ?? r.strItem ?? r.strIngredient ?? 'Item';
+      const qty = r.qty ?? r.quantity ?? r.Quantity ?? r.intQty ?? null;
+      cell.innerHTML = `<div class="name">${name}</div><div class="meta">${qty!=null?`<span class="pill">Qty: ${qty}</span>`:''} <span class="mono">#${id}</span></div>`;
+      return cell;
+    }
+    document.getElementById('btnRefreshInv').addEventListener('click', loadInventory);
+
+    // ---------- TESTS ----------
+    document.getElementById('btnTestHealth').addEventListener('click', async()=>{ try{await apiFetch(API.misc.health); toast('GET /health OK');}catch{} });
+    document.getElementById('btnTestDb').addEventListener('click',     async()=>{ try{await apiFetch(API.misc.db);     toast('GET /dbcheck OK');}catch{} });
+    document.getElementById('btnTestUsers').addEventListener('click',  async()=>{ try{await apiFetch(API.users.list);  toast('GET /api/users OK');}catch{} });
+    document.getElementById('btnTestIngr').addEventListener('click',   async()=>{ try{await apiFetch(API.ingredients.list); toast('GET /api/ingredients OK');}catch{} });
+    document.getElementById('btnTestMenu').addEventListener('click',   async()=>{ try{await apiFetch(API.items.list); toast('GET /api/menu OK');}catch{} });
+    document.getElementById('btnTestInv').addEventListener('click',    async()=>{ try{await apiFetch(API.inventory.list); toast('GET /api/inventory OK');}catch{} });
+
+    // ---------- INIT ----------
+    showTab('tabStaff');
+  })();
+  </script>
+</body>
+</html>

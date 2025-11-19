@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Order Summary</title>
+  <style>
+    :root{
+      --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+      --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+      --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+      --radius-lg:18px; --radius-md:14px; --radius-sm:10px; --gap:1rem;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+      color:var(--text); line-height:1.45;
+    }
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1200px,92vw);margin:0 auto}
+    .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.1) blur(6px)}
+    .nav{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:var(--gap);padding:14px 0}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.15rem}
+    .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+    .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(480px,60vw);box-shadow:var(--shadow)}
+    .search input{border:0;outline:0;width:100%;font:inherit;background:transparent;color:var(--text)}
+    .search input::placeholder{color:var(--muted)}
+    .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline);overflow:hidden}
+
+    /* Breadcrumb */
+    .crumbs{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.95rem;margin:8px 0 14px}
+    .crumbs .sep{opacity:.6}
+
+    /* Layout */
+    .layout{display:grid;grid-template-columns:1.2fr .85fr;gap:22px;margin:10px 0 28px}
+    @media (max-width: 980px){ .layout{grid-template-columns: 1fr; } }
+
+    /* Panels */
+    .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:clip}
+    .pad{padding:16px 16px 18px}
+
+    /* Section headers */
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:6px 0 12px}
+    .section-head h2{margin:0;font-size:1.15rem}
+    .hint{color:var(--muted);font-size:.95rem}
+
+    /* Order items list */
+    .items{display:grid;gap:14px}
+    .item{display:grid;grid-template-columns:100px 1fr auto;gap:14px;align-items:start;border:1px solid var(--outline);border-radius:var(--radius-md);padding:12px;background:#fff}
+    .item-media{width:100px;height:80px;border-radius:12px;overflow:hidden;background:#edf5f1}
+    .item-media img{width:100%;height:100%;object-fit:cover}
+    .item-title{margin:0 0 6px;font-size:1.05rem}
+    .badge{background:var(--brand-050);color:var(--brand);border:1px solid var(--outline);font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;display:inline-block;margin-left:8px}
+    .muted{color:var(--muted)}
+    .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:6px}
+    .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+    .item-actions{display:flex;gap:10px;align-items:center}
+    .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+    .qty{display:inline-flex;align-items:center;border:1px solid var(--outline);border-radius:999px;overflow:hidden}
+    .qty button{all:unset;cursor:pointer;padding:6px 10px}
+    .qty span{padding:0 10px}
+
+    /* Totals / nutrition */
+    .totals .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+    .pill{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+    .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    @media (max-width: 400px){ .facts{grid-template-columns:1fr} }
+    .fact{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--outline);border-radius:12px;padding:10px;background:#fff}
+    .fact strong{font-size:1.05rem}
+    .divider{height:1px;background:var(--outline);margin:10px 0}
+
+    /* CTA */
+    .cta{
+      display:block;width:100%;text-align:center;margin-top:12px;
+      background:linear-gradient(135deg,var(--brand),var(--brand-600));
+      color:#fff;border:0;border-radius:14px;padding:14px 16px;font-weight:800;
+      box-shadow:0 10px 20px rgba(47,125,95,.25);cursor:pointer;
+      transition:transform .06s ease, box-shadow .12s ease;
+    }
+    .cta:hover{transform:translateY(-1px);box-shadow:0 14px 26px rgba(47,125,95,.3)}
+    .fine{color:var(--muted);font-size:.9rem;text-align:center;margin-top:6px}
+  </style>
+</head>
+<body>
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav" role="navigation" aria-label="Top">
+      <div class="brand">
+        <span class="brand-badge" aria-hidden="true">BB</span>
+        <span>BedsideBistro</span>
+      </div>
+
+      <label class="search" aria-label="Search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="search" placeholder="Search your order…" />
+      </label>
+
+      <button class="profile" aria-label="Open profile menu">
+        <div class="avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+          </svg>
+        </div>
+        <span class="sr-only">Profile</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="content" class="container" style="margin-top:10px">
+    <!-- Breadcrumb -->
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="#">Menu</a> <span class="sep">›</span>
+      <a href="#">Recommendations</a> <span class="sep">›</span>
+      <span aria-current="page">Order Summary</span>
+    </nav>
+
+    <div class="layout">
+      <!-- LEFT: Items in order -->
+      <section class="panel">
+        <div class="pad">
+          <div class="section-head">
+            <h2>Your items</h2>
+            <div class="hint">Review items & alterations</div>
+          </div>
+
+          <div class="items" role="list">
+            <!-- Item 1 -->
+            <article class="item" role="listitem">
+              <div class="item-media" aria-hidden="true">
+                <img src="https://images.unsplash.com/photo-1716034353309-c6066ae24c67?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGdyaWxsZWQlMjBjaGlja2VuJTIwc2FsYWR8ZW58MHx8MHx8fDA%3D" alt="">
+              </div>
+              <div>
+                <h3 class="item-title">
+                  Grilled Chicken Salad
+                  <span class="badge">Low Sodium</span>
+                </h3>
+                <div class="muted">Mixed greens · cherry tomatoes · cucumber · light vinaigrette</div>
+                <div class="chips" aria-label="Alterations">
+                  <span class="chip">Remove croutons</span>
+                  <span class="chip">Extra tomatoes</span>
+                  <span class="chip">Dressing on the side</span>
+                </div>
+                <div class="chips" aria-label="Per-item nutrition">
+                  <span class="chip">~350 kcal</span>
+                  <span class="chip">28g protein</span>
+                  <span class="chip">&lt; 380mg sodium</span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="qty" aria-label="Quantity">
+                  <button aria-label="Decrease">−</button><span>1</span><button aria-label="Increase">+</button>
+                </div>
+                <button class="ghost" type="button" aria-label="Edit item">Edit</button>
+                <button class="ghost" type="button" aria-label="Remove item">Remove</button>
+              </div>
+            </article>
+
+            <!-- Item 2 -->
+            <article class="item" role="listitem">
+              <div class="item-media" aria-hidden="true">
+                <img src="https://plus.unsplash.com/premium_photo-1722427244478-d40cfe83cc9c?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dG9tYXRvJTIwc291cHxlbnwwfHwwfHx8MA%3D%3D" alt="">
+              </div>
+              <div>
+                <h3 class="item-title">
+                  Tomato Basil Soup
+                  <span class="badge">Vegetarian</span>
+                </h3>
+                <div class="muted">Slow-simmered tomatoes · basil · touch of cream</div>
+                <div class="chips" aria-label="Alterations">
+                  <span class="chip">No croutons</span>
+                </div>
+                <div class="chips" aria-label="Per-item nutrition">
+                  <span class="chip">~210 kcal</span>
+                  <span class="chip">4g protein</span>
+                  <span class="chip">&lt; 420mg sodium</span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="qty" aria-label="Quantity">
+                  <button aria-label="Decrease">−</button><span>1</span><button aria-label="Increase">+</button>
+                </div>
+                <button class="ghost" type="button">Edit</button>
+                <button class="ghost" type="button">Remove</button>
+              </div>
+            </article>
+
+            <!-- Item 3 -->
+            <article class="item" role="listitem">
+              <div class="item-media" aria-hidden="true">
+                <img src="https://plus.unsplash.com/premium_photo-1661540515873-0d7c4e07891a?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="">
+              </div>
+              <div>
+                <h3 class="item-title">
+                  Cucumber Mint Water
+                  <span class="badge">Hydration</span>
+                </h3>
+                <div class="muted">Chilled · unsweetened · refreshing</div>
+                <div class="chips" aria-label="Alterations">
+                  <span class="chip">No ice</span>
+                </div>
+                <div class="chips" aria-label="Per-item nutrition">
+                  <span class="chip">0 kcal</span>
+                  <span class="chip">No added sugar</span>
+                  <span class="chip">Caffeine-free</span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="qty" aria-label="Quantity">
+                  <button aria-label="Decrease">−</button><span>2</span><button aria-label="Increase">+</button>
+                </div>
+                <button class="ghost" type="button">Edit</button>
+                <button class="ghost" type="button">Remove</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Total order nutrition -->
+      <aside class="panel totals" aria-label="Total order nutrition">
+        <div class="pad">
+          <div class="section-head">
+            <h2>Order nutrition</h2>
+            <div class="hint">Totals across all items</div>
+          </div>
+
+          <div class="facts">
+            <div class="fact"><span>Total Calories</span> <strong>770 kcal</strong></div>
+            <div class="fact"><span>Total Protein</span> <strong>36 g</strong></div>
+            <div class="fact"><span>Total Sodium</span> <strong>&lt; 1,180 mg</strong></div>
+            <div class="fact"><span>Total Carbs</span> <strong>~80 g</strong></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <span class="pill">Low-sodium choices highlighted</span>
+            <span class="pill">Hydration included</span>
+          </div>
+
+          <button class="cta" type="button" aria-label="Place order">Place Order</button>
+          <div class="fine">Prototype only — button does not submit.</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

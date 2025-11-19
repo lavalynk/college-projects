@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Ordering System</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --radius-lg:18px;
+    --row-alt:#f3fbf6; /* very light green */
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+  .container{width:min(1200px,92vw);margin:0 auto}
+
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:flex;align-items:center;gap:12px;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;box-shadow:var(--shadow)}
+
+  .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-top:12px}
+  .pad{padding:14px 14px 18px}
+
+  .header-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .left-head{display:flex;align-items:center;gap:10px}
+  h1{margin:0;font-size:1.2rem}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;color:#3949ab;font-weight:800}
+
+  .controls{display:flex;gap:.5rem;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;transition:all .15s ease}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+  #toOrder:hover{background:var(--brand-050); border-color:var(--brand); box-shadow:0 6px 14px rgba(47,125,95,.18)}
+
+  .table-wrap{overflow:auto;border:1px solid var(--outline);border-radius:14px}
+  table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
+  thead th{position:sticky;top:0;background:#fbfefd;border-bottom:1px solid var(--outline);text-align:left;padding:12px 10px;font-weight:800}
+  tbody td{border-top:1px solid #eef4f1;padding:12px 10px}
+  tbody tr:hover{background:#fbfefd}
+  /* zebra striping */
+  tbody tr:nth-child(even){background:var(--row-alt)}
+
+  /* center numeric columns */
+  .center { text-align:center; }
+
+  .qty-input{width:100px;border:1px solid var(--outline);border-radius:10px;padding:6px 8px;font:inherit;text-align:center}
+  .qty-input.alert{border-color:#b00020;background:#ffeaea}
+</style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Inventory</span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="panel">
+    <div class="pad header-row">
+      <div class="left-head">
+        <h1>Ordering System</h1>
+        <span class="badge" id="countBadge">0 items</span>
+      </div>
+      <div class="controls">
+        <button class="btn" id="toOrder">Move suggestions → Order</button>
+        <button class="btn primary" id="submitOrder">Submit order</button>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:46%">INGREDIENT</th>
+              <th class="center" style="width:18%">Quantity (On Hand)</th>
+              <th class="center" style="width:18%">Suggested Qty</th>
+              <th class="center" style="width:18%">Order</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-main"><tr><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const url = `${location.origin}/api/ingredients`;
+  let DATA = [];
+
+  async function load(){
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) throw new Error('load failed');
+    DATA = await res.json();      // [{id,name,quantity}]
+    renderAll();
+  }
+
+  // Par rule
+  function suggested(qty){ const PAR = 150; return Math.max(0, PAR - (qty||0)); }
+  function orderPrefill(qty){ return Math.max(0, suggested(qty) - (qty||0)); } // = max(0, S − QOH)
+
+  const byId = id => document.getElementById(id);
+  const up = s => (s||'').toString().toUpperCase();
+  const fmt = n => (n ?? 0).toLocaleString();
+
+  function rowHtml(r){
+    const s = suggested(r.quantity);
+    const prefill = orderPrefill(r.quantity);
+    const needs = (r.quantity ?? 0) < s;      // red highlight rule
+    return `
+      <tr data-id="${r.id}">
+        <td>${up(r.name)}</td>
+        <td class="center">${fmt(r.quantity)}</td>
+        <td class="center"><strong>${fmt(s)}</strong></td>
+        <td class="center">
+          <input class="qty-input ${needs ? 'alert' : ''}" type="number" min="0" step="1"
+                 value="${prefill || ''}" aria-label="Order quantity for ${up(r.name)}">
+        </td>
+      </tr>
+    `;
+  }
+
+  function renderMain(){
+    byId('tbody-main').innerHTML =
+      DATA.map(rowHtml).join('') || `<tr><td colspan="4">No ingredients.</td></tr>`;
+  }
+
+  function renderCount(){ byId('countBadge').textContent = `${DATA.length} items`; }
+  function renderAll(){ renderCount(); renderMain(); }
+
+  // Move suggestions → Order (fills Order column with max(0, S − QOH))
+  byId('toOrder').addEventListener('click', ()=>{
+    const tbody = byId('tbody-main');
+    [...tbody.querySelectorAll('tr')].forEach(tr=>{
+      const id = +tr.dataset.id;
+      const row = DATA.find(x=>x.id===id);
+      if(!row) return;
+      const val = orderPrefill(row.quantity);
+      const input = tr.querySelector('input.qty-input');
+      if(input) input.value = val || '';
+    });
+  });
+
+  // Submit (prints payload for now)
+  byId('submitOrder').addEventListener('click', ()=>{
+    const tbody = byId('tbody-main');
+    const payload = [...tbody.querySelectorAll('tr')].map(tr=>{
+      const id = +tr.dataset.id;
+      const row = DATA.find(x=>x.id===id);
+      const input = tr.querySelector('input.qty-input');
+      const orderQty = input ? parseInt(input.value||'0',10) : 0;
+      return { id, name: row?.name ?? '', onHand: row?.quantity ?? 0, suggested: suggested(row?.quantity ?? 0), orderQty };
+    }).filter(x=>x.orderQty>0);
+
+    console.log('[order]', payload);
+    alert(payload.length ? `Order with ${payload.length} lines captured (see console).` : 'No order quantities entered.');
+    // TODO: POST payload to your API when ready.
+  });
+
+  // keep red highlight rule on input change too
+  document.addEventListener('input', (e)=>{
+    if(!(e.target instanceof HTMLInputElement)) return;
+    if(!e.target.classList.contains('qty-input')) return;
+    const tr = e.target.closest('tr');
+    const id = +tr.dataset.id;
+    const row = DATA.find(x=>x.id===id);
+    const need = (row?.quantity ?? 0) < suggested(row?.quantity ?? 0);
+    e.target.classList.toggle('alert', need);
+  });
+
+  load().catch(err=>{
+    console.error(err);
+    byId('tbody-main').innerHTML = `<tr><td colspan="4" style="color:#b00020">Failed to load ingredients.</td></tr>`;
+  });
+</script>
+</body>
+</html>

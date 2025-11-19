@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Admin Overview</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+    --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+    color:var(--text); line-height:1.45;
+  }
+  a{color:inherit;text-decoration:none}
+  .container{width:min(1280px,94vw);margin:0 auto}
+  .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+  .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(460px,50vw);box-shadow:var(--shadow)}
+  .search input{border:0;outline:0;width:100%;font:inherit;background:transparent}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Toolbar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:8px 0 12px}
+  .select,.input{border:1px solid var(--outline);border-radius:12px;padding:8px 10px;font:inherit;background:#fff}
+  .tab{appearance:none;border:1px solid var(--outline);background:var(--tab);color:var(--muted);padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer}
+  .tab[aria-current="page"]{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(47,125,95,.25)}
+  .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+  .hint{color:var(--muted);font-size:.95rem}
+
+  /* Layout */
+  .grid{display:grid;gap:18px}
+  .cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cols-2{grid-template-columns:1.2fr .8fr}
+  @media (max-width:1000px){ .cols-3{grid-template-columns:1fr} .cols-2{grid-template-columns:1fr} }
+
+  /* Panels / Cards */
+  .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:clip}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+  .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  @media (max-width:720px){ .kpis{grid-template-columns:1fr} }
+
+  .kpi{
+    border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff;display:grid;gap:6px;
+  }
+  .kpi .label{color:var(--muted);font-size:.95rem}
+  .kpi .value{font-size:1.6rem;font-weight:800}
+  .kpi .delta{font-size:.9rem}
+  .pos{color:var(--ok)} .neg{color:var(--alert)}
+
+  /* Donut */
+  .donut-wrap{display:grid;grid-template-columns:140px 1fr;gap:14px;align-items:center}
+  .donut{
+    --p-complete: 62;
+    --p-cancel: 8;
+    --p-other: 30;
+    width:140px;height:140px;border-radius:50%;
+    background:
+      conic-gradient(
+        var(--brand) calc(var(--p-complete)*1%),
+        #e76a6a 0 calc((var(--p-complete) + var(--p-cancel))*1%),
+        #c8d8f5 0
+      );
+    position:relative;box-shadow:var(--shadow);border:1px solid var(--outline)
+  }
+  .donut::after{
+    content:""; position:absolute; inset:16px; background:#fff; border-radius:50%;
+    border:1px solid var(--outline);
+  }
+  .donut-center{
+    position:absolute; inset:0; display:grid; place-items:center; pointer-events:none;
+  }
+  .donut-center span{font-weight:800}
+
+  .legend{display:grid;gap:6px}
+  .legend .row{display:flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.complete{background:var(--brand)}
+  .dot.cancel{background:#e76a6a}
+  .dot.other{background:#c8d8f5}
+
+  /* Bars */
+  .bars{display:grid;gap:10px}
+  .bar{display:grid;gap:6px}
+  .bar .label{display:flex;justify-content:space-between;color:var(--muted)}
+  .bar .track{height:12px;border-radius:999px;background:#eaf2ef;border:1px solid var(--outline);overflow:hidden}
+  .bar .fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand-600))}
+
+  /* Table-ish recent activity */
+  .list{display:grid;gap:10px}
+  .row{
+    border:1px solid var(--outline);border-radius:16px;padding:10px;background:#fff;
+    display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;
+  }
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.95rem}
+  .pill{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+  .status{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--outline);border-radius:999px;padding:6px 10px;background:#fbfefd;font-weight:700;font-size:.85rem}
+  .s-complete{border-color:#cfe5db;color:var(--ok)}
+  .s-cancel{border-color:#f0c1c1;color:var(--alert)}
+  .s-prep{border-color:#c9e2d7}
+  .s-onway{border-color:#c8d8f5}
+  @media (max-width:720px){ .row{grid-template-columns:1fr} }
+
+  footer{color:var(--muted);font-size:.9rem;text-align:center;padding:24px 0}
+</style>
+</head>
+<body>
+<a href="#content" class="sr-only">Skip to content</a>
+
+<header>
+  <div class="container nav" role="navigation" aria-label="Top">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Admin</span>
+    </div>
+
+    <label class="search" aria-label="Search">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input type="search" placeholder="Search units, orders, users…" />
+    </label>
+
+    <button class="profile" aria-label="Admin profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+      <span class="sr-only">Open profile</span>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <!-- Toolbar / filters -->
+  <div class="toolbar" role="region" aria-label="Filters">
+    <label class="hint" for="unit">Unit:</label>
+    <select id="unit" class="select">
+      <option selected>All units</option>
+      <option>4B — Cardiac</option>
+      <option>5C — Renal</option>
+      <option>3A — Ortho</option>
+    </select>
+
+    <span class="hint" style="margin-left:6px">Range:</span>
+    <button class="tab" id="rToday" aria-current="page">Today</button>
+    <button class="tab" id="r7">Last 7 days</button>
+    <button class="tab" id="r30">Last 30 days</button>
+
+    <span style="flex:1"></span>
+    <button class="ghost" type="button">Export CSV</button>
+  </div>
+
+  <!-- KPIs -->
+  <section class="panel">
+    <div class="pad">
+      <div class="section-head">
+        <h2>Key metrics</h2>
+        <div class="hint" id="rangeLabel">Today</div>
+      </div>
+      <div class="kpis" aria-live="polite">
+        <div class="kpi">
+          <div class="label">Total orders</div>
+          <div class="value" id="kTotal">32</div>
+          <div class="delta"><span class="pos" id="kTotalDelta">+12% vs yesterday</span></div>
+        </div>
+        <div class="kpi">
+          <div class="label">Completed</div>
+          <div class="value" id="kDone">20</div>
+          <div class="delta"><span class="pos" id="kDoneDelta">+8% on-time</span></div>
+        </div>
+        <div class="kpi">
+          <div class="label">Cancelled</div>
+          <div class="value" id="kCancel">3</div>
+          <div class="delta"><span class="neg" id="kCancelDelta">-1% vs avg</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Breakdown + Activity -->
+  <div class="grid cols-2">
+    <!-- LEFT: Breakdown -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Status breakdown</h2>
+          <div class="hint">Distribution & counts</div>
+        </div>
+
+        <div class="donut-wrap">
+          <div class="donut" id="donut" aria-hidden="true">
+            <div class="donut-center"><span id="donutLabel">62% Done</span></div>
+          </div>
+          <div class="legend" aria-label="Legend">
+            <div class="row"><span class="dot complete"></span> Completed: <strong id="lDone" style="margin-left:6px">20</strong></div>
+            <div class="row"><span class="dot cancel"></span> Cancelled: <strong id="lCancel" style="margin-left:6px">3</strong></div>
+            <div class="row"><span class="dot other"></span> In progress: <strong id="lOther" style="margin-left:6px">9</strong></div>
+          </div>
+        </div>
+
+        <div class="bars" style="margin-top:14px">
+          <div class="bar">
+            <div class="label"><span>Preparing</span><strong id="bPrepC">5</strong></div>
+            <div class="track"><div class="fill" id="bPrep" style="width:40%"></div></div>
+          </div>
+          <div class="bar">
+            <div class="label"><span>Waiting for runner</span><strong id="bWaitC">2</strong></div>
+            <div class="track"><div class="fill" id="bWait" style="width:16%"></div></div>
+          </div>
+          <div class="bar">
+            <div class="label"><span>On the way</span><strong id="bWayC">2</strong></div>
+            <div class="track"><div class="fill" id="bWay" style="width:16%"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Recent activity -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Recent activity</h2>
+          <div class="hint">Latest completions & cancellations</div>
+        </div>
+
+        <div class="list" role="list">
+          <div class="row" role="listitem">
+            <div class="mono">08:12</div>
+            <div>Roasted Veggie Bowl — 4B-214 • <span class="pill">Vegan</span></div>
+            <div class="status s-complete">Completed</div>
+          </div>
+          <div class="row" role="listitem">
+            <div class="mono">08:06</div>
+            <div>Tomato Basil Soup — 4B-210 • <span class="pill">Vegetarian</span></div>
+            <div class="status s-complete">Completed</div>
+          </div>
+          <div class="row" role="listitem">
+            <div class="mono">07:58</div>
+            <div>Turkey &amp; Avocado Sandwich — 3A-118 <span class="pill">Whole Grain</span></div>
+            <div class="status s-cancel">Cancelled (patient off unit)</div>
+          </div>
+          <div class="row" role="listitem">
+            <div class="mono">07:55</div>
+            <div>Grilled Chicken Salad — 4B-213 <span class="pill">Low Sodium</span></div>
+            <div class="status s-prep">Preparing</div>
+          </div>
+          <div class="row" role="listitem">
+            <div class="mono">07:49</div>
+            <div>Cucumber Mint Water — 4B-213 <span class="pill">Hydration</span></div>
+            <div class="status s-onway">On the way</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Ops KPIs -->
+  <section class="panel">
+    <div class="pad">
+      <div class="section-head">
+        <h2>Operational KPIs</h2>
+        <div class="hint">Prep & delivery performance</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <div class="label">Avg prep time</div>
+          <div class="value" id="kPrep">14m</div>
+          <div class="delta"><span class="pos" id="kPrepDelta">within 15m SLA</span></div>
+        </div>
+        <div class="kpi">
+          <div class="label">Avg delivery time</div>
+          <div class="value" id="kDeliv">11m</div>
+          <div class="delta"><span id="kDelivDelta">to bedside</span></div>
+        </div>
+        <div class="kpi">
+          <div class="label">On-time %</div>
+          <div class="value" id="kOnTime">88%</div>
+          <div class="delta"><span class="pos" id="kOnTimeDelta">↑ vs target 85%</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Prototype UI · BedsideBistro — metrics are sample data only.
+  </footer>
+</main>
+
+<script>
+  // tiny data + updater to keep it spicy but static
+  const DATA = {
+    today: {
+      total: 32, done: 20, cancel: 3, prep: 5, wait: 2, way: 2,
+      ontime: 88, avgPrep: "14m", avgDeliv: "11m",
+      deltas: { total:"+12% vs yesterday", done:"+8% on-time", cancel:"-1% vs avg" }
+    },
+    d7: {
+      total: 214, done: 168, cancel: 18, prep: 16, wait: 6, way: 6,
+      ontime: 86, avgPrep: "15m", avgDeliv: "12m",
+      deltas: { total:"+5% vs prior", done:"+2% on-time", cancel:"+0.3% vs avg" }
+    },
+    d30: {
+      total: 890, done: 706, cancel: 74, prep: 56, wait: 28, way: 26,
+      ontime: 85, avgPrep: "15m", avgDeliv: "12m",
+      deltas: { total:"+9% vs prior", done:"+1% on-time", cancel:"+0.5% vs avg" }
+    }
+  };
+
+  const qs = s => document.querySelector(s);
+  const setText = (id, v) => (qs(id).textContent = v);
+
+  function setBars(scope){
+    const { total, prep, wait, way } = scope;
+    const pct = x => total ? Math.round((x/total)*100) : 0;
+    qs("#bPrep").style.width = pct(prep) + "%";
+    qs("#bWait").style.width = pct(wait) + "%";
+    qs("#bWay").style.width  = pct(way)  + "%";
+    setText("#bPrepC", prep);
+    setText("#bWaitC", wait);
+    setText("#bWayC", way);
+  }
+
+  function setDonut(scope){
+    const { total, done, cancel } = scope;
+    const pDone = total? Math.round(done/total*100) : 0;
+    const pCancel = total? Math.round(cancel/total*100) : 0;
+    const donut = qs("#donut");
+    donut.style.background = `conic-gradient(
+      var(--brand) ${pDone}%,
+      #e76a6a 0 ${pDone + pCancel}%,
+      #c8d8f5 0
+    )`;
+    setText("#donutLabel", `${pDone}% Done`);
+    setText("#lDone", done);
+    setText("#lCancel", cancel);
+    setText("#lOther", Math.max(0, total - done - cancel));
+  }
+
+  function setKPIs(scope, label){
+    setText("#rangeLabel", label);
+    setText("#kTotal", scope.total);
+    setText("#kDone", scope.done);
+    setText("#kCancel", scope.cancel);
+    setText("#kOnTime", scope.ontime + "%");
+    setText("#kPrep", scope.avgPrep);
+    setText("#kDeliv", scope.avgDeliv);
+    setText("#kTotalDelta", scope.deltas.total);
+    setText("#kDoneDelta", scope.deltas.done);
+    setText("#kCancelDelta", scope.deltas.cancel);
+  }
+
+  function activate(btn){
+    document.querySelectorAll(".tab").forEach(b=> b.removeAttribute("aria-current"));
+    btn.setAttribute("aria-current","page");
+  }
+
+  // wire buttons
+  qs("#rToday").addEventListener("click", (e)=>{ activate(e.currentTarget); setAll(DATA.today, "Today"); });
+  qs("#r7").addEventListener("click", (e)=>{ activate(e.currentTarget); setAll(DATA.d7, "Last 7 days"); });
+  qs("#r30").addEventListener("click", (e)=>{ activate(e.currentTarget); setAll(DATA.d30, "Last 30 days"); });
+
+  function setAll(scope, label){
+    setKPIs(scope, label);
+    setBars(scope);
+    setDonut(scope);
+  }
+
+  // init
+  setAll(DATA.today, "Today");
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Helpdesk</title>
+  <link rel="stylesheet" href="/global.css" />
+  <style>
+    body {
+      background: var(--bg);
+      padding: 30px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 60px);
+    }
+
+    .header-row {
+      margin-bottom: 10px;
+    }
+
+    .header-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    .header-main h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .header-main .hint {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: 8px;
+    }
+
+    .chat-shell {
+      flex: 1 1 auto;
+      border-radius: 18px;
+      border: 1px solid var(--outline);
+      background: #fff;
+      box-shadow: var(--shadow-card, 0 6px 18px rgba(0,0,0,.08));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-log {
+      flex: 1 1 auto;
+      padding: 14px 16px;
+      overflow-y: auto;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%),
+        #f8faf9;
+    }
+
+    .chat-line {
+      max-width: 70%;
+      margin-bottom: 8px;
+      padding: 8px 11px;
+      border-radius: 12px;
+      font-size: .95rem;
+      line-height: 1.4;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-line.user {
+      margin-left: auto;
+      background: #e7f3ff;
+      border: 1px solid #c2d8f5;
+    }
+
+    .chat-line.bot {
+      margin-right: auto;
+      background: #ffffff;
+      border: 1px solid var(--outline);
+    }
+
+    .chat-footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--outline);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .chat-input {
+      flex: 1 1 auto;
+      border-radius: 999px;
+      border: 1px solid var(--outline);
+      padding: 8px 12px;
+      font: inherit;
+      background: #fff;
+    }
+
+    .chat-input:focus {
+      outline: 2px solid var(--brand-050);
+      outline-offset: 1px;
+    }
+
+    .btn {
+      appearance: none;
+      border-radius: 14px;
+      border: 0;
+      padding: 8px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--brand), var(--brand-600));
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(47,125,95,.25);
+      white-space: nowrap;
+    }
+
+    .btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(47,125,95,.3);
+    }
+
+    .ghost {
+      appearance: none;
+      border: 1px solid var(--outline);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: .8rem;
+      white-space: nowrap;
+    }
+
+    .ghost:hover {
+      background: #f7faf9;
+    }
+
+    .hint-inline {
+      font-size: .8rem;
+      color: var(--muted);
+      padding: 6px 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header-row">
+      <div class="header-main">
+        <h1>Helpdesk</h1>
+        <div class="hint">
+          Ask how to use any BedsideBistro screen. Be specific about the page and tab.
+        </div>
+      </div>
+
+      <div class="preset-row">
+        <!-- Patient and nurse flows -->
+        <button type="button" class="ghost"
+                data-preset="How do I place an order for a patient?">
+          Place patient order
+        </button>
+        <button type="button" class="ghost"
+                data-preset="On Nurse View, how do I start an order for a patient?">
+          Nurse - start order
+        </button>
+        <button type="button" class="ghost"
+                data-preset="In Kitchen View, how do I move a ticket through the statuses?">
+          Kitchen ticket flow
+        </button>
+
+        <!-- Admin - staff and ingredients -->
+        <button type="button" class="ghost"
+                data-preset="On the Staff tab, how do I add a new user?">
+          New staff user
+        </button>
+        <button type="button" class="ghost"
+                data-preset="On the Ingredients tab, how do I add a new ingredient?">
+          New ingredient
+        </button>
+
+        <!-- Admin - menu and inventory -->
+        <button type="button" class="ghost"
+                data-preset="On the Menu Items tab, how do I set up a new menu item?">
+          New menu item
+        </button>
+        <button type="button" class="ghost"
+                data-preset="On the Menu Items tab, how do I upload an image for an item?">
+          Upload item image
+        </button>
+        <button type="button" class="ghost"
+                data-preset="On the Inventory tab, how do I update quantities?">
+          Update inventory
+        </button>
+        <button type="button" class="ghost"
+                data-preset="On the Ordering page, how do Suggested Ordering and Order Qty work?">
+          Ordering suggestions
+        </button>
+
+        <!-- Command style - add ingredient -->
+        <button type="button" class="ghost"
+                data-preset="add ingredient Tomato qty 40">
+          Add ingredient (command)
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-shell">
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+      <div class="chat-footer">
+        <input id="chatInput" class="chat-input" placeholder="Type a question or a command..." autocomplete="off" />
+        <button id="chatSend" class="btn primary" type="button">Send</button>
+      </div>
+    </div>
+
+    <div class="hint-inline">
+      Tip: to add an ingredient directly from here you can send a command like<br />
+      <code>add ingredient Roma Tomato qty 30</code>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const chatLog   = document.getElementById("chatLog");
+      const chatInput = document.getElementById("chatInput");
+      const chatSend  = document.getElementById("chatSend");
+      const API_URL   = "/api/helpchat";
+
+      function addLine(text, who) {
+        const div = document.createElement("div");
+        div.className = "chat-line " + (who === "user" ? "user" : "bot");
+        div.textContent = text;
+        chatLog.appendChild(div);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        addLine(text, "user");
+        chatInput.value = "";
+        chatInput.focus();
+
+        chatSend.disabled = true;
+        chatSend.textContent = "…";
+
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+          });
+
+          let data = {};
+          try {
+            data = await res.json();
+          } catch {
+            data = {};
+          }
+
+          if (!res.ok) {
+            const msg = (data && data.reply) || "The helpdesk is not available right now.";
+            addLine(msg, "bot");
+          } else {
+            const reply = (data && data.reply) || "Sorry, I could not answer that.";
+            addLine(reply, "bot");
+          }
+        } catch (err) {
+          console.error("helpdesk error", err);
+          addLine("The helpdesk service is unreachable right now.", "bot");
+        } finally {
+          chatSend.disabled = false;
+          chatSend.textContent = "Send";
+        }
+      }
+
+      chatSend.addEventListener("click", sendMessage);
+
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Preset buttons
+      document.querySelectorAll("[data-preset]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const text = btn.getAttribute("data-preset");
+          chatInput.value = text;
+          chatInput.focus();
+        });
+      });
+
+      // Initial greeting
+      addLine("Hi. Tell me which page you are on, like Admin - Staff or Nurse View, and what you want to do.", "bot");
+    })();
+  </script>
+</body>
+</html>

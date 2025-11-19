@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro - Login</title>
+  <link rel="stylesheet" href="global.css" />
+  
+</head>
+<body class="login">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <header>
+    <div class="container nav">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="content" class="center-wrap">
+    <section class="login-card" aria-label="Login">
+      <div class="login-head">
+        <div class="login-title">
+          <h1>BedsideBistro Login</h1>
+          <span class="subtle">Patient MRN or Staff sign in</span>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sign in type">
+          <button id="tabPatient" class="tab" role="tab" aria-current="page">Patient MRN</button>
+          <button id="tabStaff" class="tab" role="tab">Staff</button>
+        </nav>
+      </div>
+
+      <div class="login-body">
+        <!-- Left panel -->
+        <div class="panel hero" aria-hidden="false">
+          <div class="banner" aria-hidden="true">
+            <img src="/food-images/sidesalad.jpg" alt="Fresh salad" />
+          </div>
+          <div style="margin-top:12px">
+            <strong>Healthy, simple, on your schedule.</strong>
+            <p class="subtle" style="margin:6px 0 0">Review nutrition, set preferences, and place orders.</p>
+          </div>
+          <div class="chip-row">
+            <span class="chip">Low Sodium</span>
+            <span class="chip">Allergen Alerts</span>
+            <span class="chip">Diet Orders Synced</span>
+          </div>
+        </div>
+
+        <!-- Right panel -->
+        <form id="loginForm" class="panel" action="#" method="post" aria-label="Sign in">
+          <!-- MRN fields -->
+          <div id="patientFields" class="field">
+            <label for="mrn">Medical Record Number</label>
+            <input id="mrn" name="mrn" inputmode="latin-prose" autocomplete="off" placeholder="e.g., MRN001" />
+          </div>
+
+          <!-- Staff fields -->
+          <div id="staffFields" style="display:none">
+            <div class="field">
+              <label for="uname">Username</label>
+              <input id="uname" name="uname" autocomplete="username" placeholder="e.g., nurse1" />
+            </div>
+            <div class="field">
+              <label for="upass">Password</label>
+              <input id="upass" name="upass" type="password" autocomplete="current-password" />
+            </div>
+          </div>
+
+          <div id="formError" class="alert" role="alert"></div>
+
+          <div class="row">
+            <button class="cta" type="submit" aria-label="Sign in">Login</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2025 BedsideBistro</footer>
+
+  <script>
+  (function () {
+    // Elements
+    const tabPatient = document.getElementById('tabPatient');
+    const tabStaff   = document.getElementById('tabStaff');
+    const form       = document.getElementById('loginForm');
+
+    const mrnFields  = document.getElementById('patientFields');
+    const staffFields= document.getElementById('staffFields');
+
+    const mrnInput   = document.getElementById('mrn');
+    const unameInput = document.getElementById('uname');
+    const upassInput = document.getElementById('upass');
+    const errorEl    = document.getElementById('formError');
+
+    // Mode
+    let mode = 'patient';
+
+    // API endpoints
+    const CHECK_MRN_URL   = (mrn) => `/api/patients/exists?mrn=${encodeURIComponent(mrn)}`; // GET 200 or 404
+    const STAFF_LOGIN_URL = `/api/users/login`;                                             // POST { userName, password }
+
+    // Role routing
+    const rolePage = {
+      admin:   '/adminview.html',
+      nurse:   '/nurseview.html',
+      runner:  '/runnerview.html',
+      kitchen: '/kitchenview.html'
+    };
+    const VALID_ROLES = ['admin','nurse','runner','kitchen'];
+
+    function showError(msg){ errorEl.textContent = msg; errorEl.classList.add('show'); }
+    function hideError(){ errorEl.classList.remove('show'); errorEl.textContent=''; }
+
+    function setMode(newMode){
+      mode = newMode;
+      if(mode === 'patient'){
+        mrnFields.style.display = '';
+        staffFields.style.display = 'none';
+        tabPatient.setAttribute('aria-current','page');
+        tabStaff.removeAttribute('aria-current');
+        mrnInput.focus();
+      } else {
+        mrnFields.style.display = 'none';
+        staffFields.style.display = '';
+        tabStaff.setAttribute('aria-current','page');
+        tabPatient.removeAttribute('aria-current');
+        unameInput.focus();
+      }
+      hideError();
+    }
+
+    tabPatient.addEventListener('click', (e) => { e.preventDefault(); setMode('patient'); });
+    tabStaff  .addEventListener('click', (e) => { e.preventDefault(); setMode('staff'); });
+
+    function normalizeUser(payload){
+      const u0 = payload || {};
+      const u = u0.data ?? u0.user ?? u0;
+      const roleRaw = String(u.role ?? u.Role ?? '').trim().toLowerCase();
+      return {
+        userName: u.userName ?? u.UserName ?? u.username ?? '',
+        role: VALID_ROLES.includes(roleRaw) ? roleRaw : 'nurse',
+        token: u.token ?? u.accessToken ?? null
+      };
+    }
+
+    function routeByRole(user){
+      const key = VALID_ROLES.includes(user.role) ? user.role : 'nurse';
+      const qUser = encodeURIComponent(user.userName || '');
+      location.assign(`${rolePage[key]}?user=${qUser}`);
+    }
+
+    /* Submit */
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if(submitBtn) submitBtn.disabled = true;
+
+      try {
+        if(mode === 'patient'){
+          const mrn = (mrnInput.value || '').trim().toUpperCase();
+          if(!mrn){ showError('Please enter your MRN.'); mrnInput.focus(); return; }
+
+          const res = await fetch(CHECK_MRN_URL(mrn));
+          if(res.ok){
+            sessionStorage.setItem('mrn', mrn);
+            location.assign(`/patientview.html?mrn=${encodeURIComponent(mrn)}`);
+          } else if(res.status === 404){
+            showError('MRN not found.');
+            mrnInput.focus();
+          } else {
+            showError('Login failed. Please try again.');
+          }
+          return;
+        }
+
+        // Staff
+        const userName = (unameInput.value || '').trim();
+        const password = (upassInput.value || '').trim();
+        if(!userName || !password){ showError('Enter username and password.'); return; }
+
+        const res = await fetch(STAFF_LOGIN_URL, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
+          body: JSON.stringify({ userName, password })
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch {}
+
+        if(!res.ok){
+          // Prevent browser Basic Auth popup - avoid using a 401 challenge by handling 403 and 404
+          if(res.status === 403){
+            showError('Wrong password.');
+            upassInput.value = '';
+            upassInput.focus();
+            return;
+          }
+          if(res.status === 404){
+            showError('User not found.');
+            unameInput.focus();
+            return;
+          }
+          showError(data.message || 'Invalid credentials.');
+          return;
+        }
+
+        const user = normalizeUser(data);
+        if(!user.userName){ showError('Login succeeded but username missing.'); return; }
+
+        sessionStorage.setItem('user', JSON.stringify(user));
+        if(user.token) sessionStorage.setItem('token', user.token);
+
+        routeByRole(user);
+
+      } catch {
+        showError('Network error. Please try again.');
+      } finally {
+        if(submitBtn) submitBtn.disabled = false;
+      }
+    });
+
+    setMode('patient');
+  })();
+  </script>
+</body>
+</html>

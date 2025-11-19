@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro – Menu Editor (recode)</title>
+  <style>
+    :root{
+      --bg:#f7faf9;--surface:#fff;--text:#1b1f1e;--muted:#6b7671;--brand:#2f7d5f;--brand-600:#2a6f55;--brand-050:#e9f5f0;--outline:#cfe5db;--tab:#e6ebe9;--shadow:0 6px 18px rgba(0,0,0,.08);--radius-lg:18px;--radius-md:14px;--radius-sm:10px;--ok:#2f7d5f;--warn:#b56a00;--alert:#b83b3b
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1200px 600px at 80% -10%,var(--brand-050),transparent 60%),var(--bg);color:var(--text)}
+    .container{width:min(1280px,94vw);margin:0 auto}
+    a{color:inherit;text-decoration:none}
+    .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+    header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+    .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+    .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+    .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(480px,60vw);box-shadow:var(--shadow)}
+    .search input{border:0;outline:0;width:100%;font:inherit;background:transparent;color:var(--text)}
+    .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+    .layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px;margin:12px 0 28px}
+    @media (max-width:1000px){.layout{grid-template-columns:1fr}}
+
+    .panel{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+    .pad{padding:14px 14px 18px}
+    .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+    .section-head h2{margin:0;font-size:1.05rem}
+    .hint{color:var(--muted)}
+
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--brand-050);border-color:#b8d9cb}
+
+    .list{display:grid;gap:12px}
+    .cell{border:1px solid var(--outline);border-radius:16px;padding:10px;background:#fff;display:grid;gap:6px}
+    .meta{display:flex;gap:10px;align-items:center}
+    .cell img{width:60px;height:60px;object-fit:cover;border-radius:8px;display:block}
+    .name{font-weight:800}
+    .pill{font-size:.82rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd}
+
+    .ghost{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+    .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+    .btn.danger{border-color:#e7b0b0;color:#8b2323}
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:8px}
+    @media (max-width:800px){.grid2,grid3{grid-template-columns:1fr}}
+    label strong{display:block;margin-bottom:6px}
+    .input,select,textarea{border:1px solid var(--outline);border-radius:12px;padding:9px 10px;font:inherit;background:#fff;width:100%}
+    .textarea{min-height:96px;resize:vertical}
+
+    .muted{color:var(--muted)}
+    .right{display:flex;justify-content:flex-end;gap:8px}
+  </style>
+</head>
+<body>
+<a class="sr-only" href="#content">Skip to content</a>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro – Menu Editor</span>
+    </div>
+    <label class="search" aria-label="Search menus/items">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input type="search" placeholder="Search by item, ingredient, tag…" />
+    </label>
+    <button class="profile" aria-label="Kitchen profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+        </svg>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <div class="layout">
+    <!-- LEFT -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Menus</h2>
+          <div class="hint">Breakfast · Lunch · Dinner</div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Menu types">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="tab-breakfast" id="btn-breakfast">Breakfast</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-lunch" id="btn-lunch">Lunch</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-dinner" id="btn-dinner">Dinner</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-drink" id="btn-drink">Drinks</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-dessert" id="btn-dessert">Desserts</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-snacks" id="btn-snacks">Snacks</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="tab-sides" id="btn-sides">Sides</button>
+          <span style="flex:1"></span>
+          <button class="ghost" id="addItemBtn">+ Add item</button>
+        </div>
+
+        <div id="tab-breakfast" class="list" role="tabpanel" aria-labelledby="btn-breakfast" style="margin-top:10px"></div>
+        <div id="tab-lunch" class="list" role="tabpanel" aria-labelledby="btn-lunch" hidden style="margin-top:10px"></div>
+        <div id="tab-dinner" class="list" role="tabpanel" aria-labelledby="btn-dinner" hidden style="margin-top:10px"></div>
+        <div id="tab-drink" class="list" role="tabpanel" aria-labelledby="btn-drink" hidden style="margin-top:10px"></div>
+        <div id="tab-dessert" class="list" role="tabpanel" aria-labelledby="btn-dessert" hidden style="margin-top:10px"></div>
+        <div id="tab-snacks" class="list" role="tabpanel" aria-labelledby="btn-snacks" hidden style="margin-top:10px"></div>
+        <div id="tab-sides" class="list" role="tabpanel" aria-labelledby="btn-sides" hidden style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Add/Edit Panel -->
+    <aside class="panel" aria-label="Item editor" style="visibility:hidden;">
+      <form class="pad form" id="itemForm" novalidate>
+        <div class="pad">
+          <div class="section-head">
+            <h2 id="panelTitle">Add Item</h2>
+            <div class="hint">Add, remove, and edit ingredients and nutrition</div>
+          </div>
+
+          <div class="grid2">
+            <label>
+              <strong>Item name</strong>
+              <input id="itemName" class="input" placeholder="e.g. Grilled Chicken Salad" />
+            </label>
+            <label>
+              <strong>Menu type</strong>
+              <select id="menuType" class="select"></select>
+            </label>
+          </div>
+
+          <!-- INGREDIENTS -->
+          <div style="margin-top:8px; border:1px solid var(--outline); border-radius:12px; padding:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <input id="m_ingrSearch" class="input" placeholder="Search ingredients…" />
+              <button type="button" id="m_ingrClearBtn" class="ghost">Clear</button>
+            </div>
+            <div id="m_ingrBox" style="display:grid; gap:4px; max-height:180px; overflow:auto;"></div>
+            <div style="margin-top:4px; text-align:right; font-size:.85rem;">
+              Selected: <span id="m_ingrCount">0</span> / 6
+            </div>
+          </div>
+
+          <!-- NUTRITION -->
+          <div class="section-head" style="margin-top:14px">
+            <h2>Nutrition facts</h2>
+            <div class="hint">Per serving</div>
+          </div>
+          <div class="grid3">
+            <label><strong>Calories (kcal)</strong><input id="nf-calories" class="input" type="number" step="1" placeholder="350" /></label>
+            <label><strong>Protein (g)</strong><input id="nf-protein" class="input" type="number" step="0.1" placeholder="28" /></label>
+            <label><strong>Total carbs (g)</strong><input id="nf-carbs" class="input" type="number" step="0.1" placeholder="24" /></label>
+          </div>
+          <div class="grid3" style="margin-top:8px">
+            <label><strong>Total fat (g)</strong><input id="nf-fat" class="input" type="number" step="0.1" placeholder="10" /></label>
+            <label><strong>Sodium (mg)</strong><input id="nf-sodium" class="input" type="number" step="1" placeholder="380" /></label>
+            <label style="display:flex; align-items:center; gap:6px;">
+              <strong>Is Active</strong>
+              <input id="nf-active" type="checkbox" value="true" />
+            </label>
+            <div></div>
+          </div>
+
+          <div class="right" style="margin-top:14px">
+            <button class="btn primary" id="saveBtn">Save changes</button>
+          </div>
+        </div>
+      </form>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // ---------- API endpoints ----------
+  const apiEndpoints = {
+    ingredients: {
+      list:   '/api/ingredients',
+      create: '/api/ingredients',
+      update: id => `/api/ingredients/${id}`,
+      del:    id => `/api/ingredients/${id}`
+    },
+    items: {
+      list: '/api/menu',
+      create: '/api/menu',
+      get:    id => `/api/menu/${id}`,
+      update: id => `/api/menu/${id}`,
+      del:    id => `/api/menu/${id}`,
+      attachIngredients: id => `/api/menu/${id}/ingredients`
+    },
+    mealPeriods: { list: '/api/mealperiods' }
+  };
+
+  // ---------- DOM refs ----------
+  const m_mealSel = document.getElementById('menuType');
+  const editorPanel = document.querySelector('aside.panel');
+  const panelTitle = document.getElementById('panelTitle');
+  const itemForm = document.getElementById('itemForm');
+  const m_ingrBox = document.getElementById('m_ingrBox');
+  const m_ingrSearch = document.getElementById('m_ingrSearch');
+  const m_ingrCount = document.getElementById('m_ingrCount');
+  const m_ingrClearBtn = document.getElementById('m_ingrClearBtn');
+
+  // ---------- state ----------
+  let allMenuItems = [];
+  let menu_mealPeriods = [];
+  let menu_allIngredients = [];
+  let menu_selectedIngredientIds = new Set();
+  let editingItem = null;
+  let currentCategory = 'breakfast';
+
+  // ---------- helpers ----------
+  function normalizeCategory(cat) {
+    if (!cat) return '';
+    const c = String(cat).toLowerCase();
+    if (c.startsWith('breakfast')) return 'breakfast';
+    if (c.startsWith('lunch')) return 'lunch';
+    if (c.startsWith('dinner')) return 'dinner';
+    if (c.startsWith('drink')) return 'drink';
+    if (c.startsWith('dessert')) return 'dessert';
+    if (c.startsWith('snack')) return 'snack';
+    if (c.startsWith('side')) return 'side';
+    return c;
+  }
+
+  async function fetchMealPeriodsAny() {
+    const urls = ['/api/mealperiods','/api/mealPeriods','/api/MealPeriods'];
+    for (const url of urls){
+      try{
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const arr = await res.json();
+        if (Array.isArray(arr)) {
+          apiEndpoints.mealPeriods.list = url;
+          return arr;
+        }
+      }catch{}
+    }
+    return [];
+  }
+
+  async function ensureMealPeriodsLoaded() {
+    if (!menu_mealPeriods.length) menu_mealPeriods = await fetchMealPeriodsAny();
+  }
+
+  function renderMealPeriods(selectedId = '') {
+    m_mealSel.innerHTML = '';
+    if (!menu_mealPeriods.length){
+      m_mealSel.innerHTML = '<option value="">(no meal periods found)</option>';
+      return;
+    }
+    m_mealSel.appendChild(new Option('Select…', ''));
+    menu_mealPeriods.forEach(mp => {
+      const id = mp.Id ?? mp.id ?? mp.intMealPeriodID;
+      const nm = mp.Name ?? mp.name ?? mp.strMealPeriod ?? 'Meal Period';
+      const opt = new Option(nm, id);
+      if (String(id) === String(selectedId)) opt.selected = true;
+      m_mealSel.appendChild(opt);
+    });
+  }
+
+  async function ensureIngredientsLoaded() {
+    if (!menu_allIngredients.length){
+      try{
+        const res = await fetch(apiEndpoints.ingredients.list, { cache: 'no-store' });
+        if (res.ok) menu_allIngredients = await res.json();
+        else menu_allIngredients = [];
+      }catch{
+        menu_allIngredients = [];
+      }
+    }
+    renderIngredientPicker();
+  }
+
+  function renderIngredientPicker() {
+    const term = (m_ingrSearch.value || '').toLowerCase();
+    const filtered = term
+      ? menu_allIngredients.filter(g => (g.name ?? '').toLowerCase().includes(term))
+      : menu_allIngredients;
+
+    m_ingrBox.innerHTML = '';
+    filtered.forEach(g => {
+      const id = g.id;
+      const name = g.name ?? 'Ingredient';
+
+      const wrap = document.createElement('label');
+      wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='.5rem';
+      wrap.style.padding='.25rem .35rem'; wrap.style.borderRadius='8px';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = String(id);
+      cb.checked = menu_selectedIngredientIds.has(Number(id));
+      cb.addEventListener('change', () => {
+        const n = Number(id);
+        if(cb.checked){
+          if(menu_selectedIngredientIds.size >= 6){ cb.checked=false; alert('Max 6 ingredients'); return; }
+          menu_selectedIngredientIds.add(n);
+        } else {
+          menu_selectedIngredientIds.delete(n);
+        }
+        updateIngredientCount();
+      });
+
+      const span = document.createElement('span');
+      span.textContent = name;
+
+      wrap.append(cb, span);
+      m_ingrBox.appendChild(wrap);
+    });
+
+    updateIngredientCount();
+  }
+
+  function updateIngredientCount() {
+    m_ingrCount.textContent = menu_selectedIngredientIds.size;
+    const maxed = menu_selectedIngredientIds.size >= 6;
+    m_ingrBox.querySelectorAll('input[type=checkbox]').forEach(cb => { if(!cb.checked) cb.disabled = maxed; });
+  }
+
+  m_ingrSearch.addEventListener('input', renderIngredientPicker);
+  m_ingrClearBtn.addEventListener('click', () => { menu_selectedIngredientIds.clear(); renderIngredientPicker(); });
+
+  function extractIngredientIds(item) {
+    if (!item) return [];
+    let raw = [];
+    if (Array.isArray(item.ingredients)) raw = item.ingredients;
+    else if (Array.isArray(item.Ingredients)) raw = item.Ingredients;
+    else if (Array.isArray(item.ingredientIds)) raw = item.ingredientIds;
+    else if (Array.isArray(item.IngredientIds)) raw = item.IngredientIds;
+    else if (Array.isArray(item.ItemIngredients))
+      raw = item.ItemIngredients.map(x => x.ingredientId ?? x.IngredientId ?? x.id ?? x.Id);
+
+    let ids = raw.map(v => {
+      if (v && typeof v === 'object')
+        return Number(v.id ?? v.Id ?? v.ingredientId ?? v.IngredientId);
+      const n = Number(v);
+      return Number.isFinite(n) ? n : NaN;
+    }).filter(Number.isFinite);
+
+    if (!ids.length && raw.some(v => typeof v === 'string')) {
+      const names = new Set(raw.map(s => String(s).toLowerCase()));
+      ids = menu_allIngredients
+        .filter(g => names.has(String(g.name).toLowerCase()))
+        .map(g => Number(g.id))
+        .filter(Number.isFinite);
+    }
+    return ids;
+  }
+
+  function renderIngredientPickerForItem(item){
+    menu_selectedIngredientIds.clear();
+    extractIngredientIds(item).forEach(n => menu_selectedIngredientIds.add(Number(n)));
+    renderIngredientPicker();
+  }
+
+  async function loadMenu(category = null) {
+    try {
+      const response = await fetch(apiEndpoints.items.list, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const menuItems = await response.json();
+      allMenuItems = Array.isArray(menuItems) ? menuItems : [];
+
+      document.querySelectorAll('.list').forEach(list => list.innerHTML = '');
+
+      const filtered = category
+        ? allMenuItems.filter(item => normalizeCategory(item.category) === category)
+        : allMenuItems;
+
+      filtered.forEach(item => {
+        const cat = normalizeCategory(item.category);
+        const panelId =
+          cat === 'breakfast' ? 'tab-breakfast' :
+          cat === 'lunch'     ? 'tab-lunch'     :
+          cat === 'dinner'    ? 'tab-dinner'    :
+          cat === 'drink'     ? 'tab-drink'     :
+          cat === 'dessert'   ? 'tab-dessert'   :
+          cat === 'snack'     ? 'tab-snacks'    :
+          cat === 'side'      ? 'tab-sides'     : null;
+        if (!panelId) return;
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+
+        const el = document.createElement('article');
+        el.className = 'cell';
+        el.dataset.id = item.id;
+
+        const img = item.strImagePath || item.imagePath || '';
+        const calories = item.calories ?? item.Calories ?? '';
+
+        el.innerHTML = `
+          <div class="meta">
+            ${img ? `<img src="${img}" alt="${item.name ?? 'Item'}" />` : ''}
+            <span class="name">${item.name ?? ''}</span>
+            <span class="pill">${item.category ?? ''}</span>
+            <span class="muted">${calories !== '' ? `${calories} cal` : ''}</span>
+            <button class="ghost edit-btn" style="margin-left:auto;">Edit</button>
+          </div>
+        `;
+        panel.appendChild(el);
+      });
+    } catch (err) {
+      console.error('Failed to fetch menu:', err);
+    }
+  }
+
+  // ---------- tab logic ----------
+  const tabs = [
+    { btn: '#btn-breakfast', panel: '#tab-breakfast', category: 'breakfast' },
+    { btn: '#btn-lunch',     panel: '#tab-lunch',     category: 'lunch' },
+    { btn: '#btn-dinner',    panel: '#tab-dinner',    category: 'dinner' },
+    { btn: '#btn-dessert',   panel: '#tab-dessert',   category: 'dessert' },
+    { btn: '#btn-snacks',    panel: '#tab-snacks',    category: 'snack' },
+    { btn: '#btn-sides',     panel: '#tab-sides',     category: 'side' },
+    { btn: '#btn-drink',     panel: '#tab-drink',     category: 'drink' }
+  ];
+
+  function activateTab(targetBtn) {
+    tabs.forEach(({ btn, panel, category }) => {
+      const button = document.querySelector(btn);
+      const tabPanel = document.querySelector(panel);
+      const active = btn === targetBtn;
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      tabPanel.hidden = !active;
+      if (active) currentCategory = category;
+    });
+  }
+
+  tabs.forEach(({ btn, category }) => {
+    document.querySelector(btn).addEventListener('click', async () => {
+      activateTab(btn);
+      await loadMenu(category);
+    });
+  });
+
+  // ---------- editor ----------
+  function clearEditor() {
+    panelTitle.textContent = 'Add Item';
+    editorPanel.style.visibility = 'visible';
+    editingItem = null;
+    document.getElementById('itemName').value = '';
+    renderMealPeriods();
+    document.getElementById('nf-calories').value = '';
+    document.getElementById('nf-protein').value  = '';
+    document.getElementById('nf-carbs').value    = '';
+    document.getElementById('nf-fat').value      = '';
+    document.getElementById('nf-sodium').value   = '';
+    document.getElementById('nf-active').checked  = false;
+    menu_selectedIngredientIds.clear();
+    renderIngredientPicker();
+  }
+
+  async function populateEditor(item){
+    if (!item) return;
+
+    // Hydrate with full item to ensure ingredients exist
+    try {
+      const res = await fetch(apiEndpoints.items.get(item.id), { cache: 'no-store' });
+      if (res.ok) item = await res.json();
+    } catch {}
+
+    editingItem = item;
+    panelTitle.textContent = 'Edit Item';
+    editorPanel.style.visibility = 'visible';
+
+    document.getElementById('itemName').value = item.name ?? item.ItemName ?? '';
+    await ensureMealPeriodsLoaded();
+    await ensureIngredientsLoaded();
+
+    let selectedId = item.mealPeriodId ?? item.MealPeriodID;
+    if (!selectedId) {
+      const catName = (item.category ?? item.Category ?? '').toString().trim().toLowerCase();
+      const hit = menu_mealPeriods.find(mp =>
+        (mp.Name ?? mp.name ?? mp.strMealPeriod ?? '').toString().trim().toLowerCase() === catName
+      );
+      selectedId = hit ? (hit.Id ?? hit.id ?? hit.intMealPeriodID) : '';
+    }
+    renderMealPeriods(selectedId);
+
+    document.getElementById('nf-calories').value = item.calories ?? item.Calories ?? '';
+    document.getElementById('nf-protein').value  = item.proteinG ?? item.ProteinG ?? '';
+    document.getElementById('nf-carbs').value    = item.carbsG ?? item.CarbsG ?? '';
+    document.getElementById('nf-fat').value      = item.fatG ?? item.FatG ?? '';
+    document.getElementById('nf-sodium').value   = item.sodiumMg ?? item.SodiumMG ?? '';
+    document.getElementById('nf-active').checked = item.isActive ?? item.IsActive ?? false;
+
+    renderIngredientPickerForItem(item);
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', clearEditor);
+  document.body.addEventListener('click', async e => {
+    if (e.target.matches('.edit-btn')) {
+      const cell = e.target.closest('.cell');
+      const id = cell?.dataset?.id;
+      const item = allMenuItems.find(i => String(i.id) === String(id));
+      await populateEditor(item);
+    }
+  });
+
+  itemForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const mpRaw = m_mealSel.value;
+    const mealPeriodIdVal = mpRaw !== '' && mpRaw !== null ? Number(mpRaw) : null;
+
+    const payload = {
+      id: editingItem?.id ?? undefined,
+      ItemName: document.getElementById('itemName').value.trim(),
+      Category: m_mealSel.options[m_mealSel.selectedIndex]?.text?.trim() || 'Other',
+      MealPeriodID: mealPeriodIdVal,
+      Calories: document.getElementById('nf-calories').value ? Number(document.getElementById('nf-calories').value) : null,
+      ImagePath: editingItem?.ImagePath ?? editingItem?.imagePath ?? editingItem?.strImagePath ?? undefined,
+      ProteinG: document.getElementById('nf-protein').value ? Number(document.getElementById('nf-protein').value) : null,
+      CarbsG: document.getElementById('nf-carbs').value ? Number(document.getElementById('nf-carbs').value) : null,
+      FatG: document.getElementById('nf-fat').value ? Number(document.getElementById('nf-fat').value) : null,
+      SodiumMG: document.getElementById('nf-sodium').value ? Number(document.getElementById('nf-sodium').value) : null,
+      IsActive: document.getElementById('nf-active').checked,
+      Ingredients: Array.from(menu_selectedIngredientIds) // numeric IDs
+    };
+
+    if (!payload.ItemName) { alert('Item name is required.'); return; }
+    if (!payload.MealPeriodID) { alert('Please select a menu type.'); return; }
+
+    try {
+      let res;
+      if (editingItem?.id) {
+        res = await fetch(apiEndpoints.items.update(editingItem.id), {
+          method: 'PUT',
+          headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(apiEndpoints.items.create, {
+          method: 'POST',
+          headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      // Keep item-ingredient links in sync on update
+      if (editingItem?.id) {
+        const ids = Array.from(menu_selectedIngredientIds);
+        await fetch(apiEndpoints.items.attachIngredients(editingItem.id), {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json','Accept':'application/json' },
+          body: JSON.stringify({ ingredientIds: ids })
+        });
+      }
+
+      if (!res.ok) {
+        const txt = await res.text().catch(()=> '');
+        throw new Error(`Save failed (HTTP ${res.status}). ${txt || ''}`);
+      }
+
+      alert(editingItem?.id ? 'Item updated successfully!' : 'Item created successfully!');
+      editorPanel.style.visibility = 'hidden';
+      await loadMenu(currentCategory);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to save item.');
+    }
+  });
+
+  // ---------- boot ----------
+  (async () => {
+    await ensureMealPeriodsLoaded();
+    await ensureIngredientsLoaded();
+    activateTab('#btn-breakfast');
+    await loadMenu(currentCategory);
+  })();
+</script>
+
+</body>
+</html>

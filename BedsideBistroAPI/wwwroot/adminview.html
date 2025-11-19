@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro - Admin</title>
+  <link rel="stylesheet" href="global.css" />
+  <style>
+    /* -------------------------
+       Layout variables
+       ------------------------- */
+    :root {
+      --hdr: 64px;
+      --tabs: 56px;
+      --foot: 56px;
+      --emu: 64px;
+    }
+
+    /* -------------------------
+       Top tabs
+       ------------------------- */
+    .top-tabs {
+      position: sticky;
+      top: var(--hdr);
+      z-index: 40;
+      background: var(--bg);
+    }
+
+    /* -------------------------
+       Work area between tabs and footer
+       ------------------------- */
+    #work {
+      height: calc(100vh - (var(--hdr) + var(--tabs) + var(--foot)));
+      overflow: hidden;
+    }
+
+    /* -------------------------
+       Shared frame shell
+       ------------------------- */
+    .frame-shell {
+      height: 100%;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid var(--outline);
+      box-shadow: var(--shadow-lite, 0 1px 3px rgba(0,0,0,.06));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* -------------------------
+       Emulator shell
+       ------------------------- */
+    #emSection { height: 100%; display: none; }
+
+    #emToolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #fff;
+      border-bottom: 1px solid var(--outline);
+      padding: 8px 12px;
+      flex-shrink: 0;
+    }
+
+    #emRow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+    /* Make the frame area consume the remaining height */
+    #emFrameWrap {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .fill-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .admin .em-row-inline {
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:12px;
+      flex-wrap:nowrap;
+      margin:.35rem 0 .7rem;
+      padding:8px 16px;
+    }
+
+    .admin .em-row-inline .site-tabs {
+      flex-shrink:0;
+    }
+
+    /* -------------------------
+       Admin iframe panel
+       ------------------------- */
+    #panelFrame { height: 100%; display: none; }
+    #panelFrame .frame-iframe-wrap { height: 100%; }
+    #panelFrame .frame-iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* -------------------------
+       Alerts
+       ------------------------- */
+    .alert { display: none; margin: 8px 0; }
+
+    /* -------------------------
+       Debug button + drawer
+       ------------------------- */
+    .dbg-fab {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      appearance: none;
+      border: 1px solid var(--outline);
+      background: #fff;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      z-index: 10001;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .dbg-drawer {
+      position: fixed;
+      left: 16px;
+      bottom: 70px;
+      width: min(420px, 94vw);
+      max-height: 60vh;
+      background: #fff;
+      border: 1px solid var(--outline);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 10000;
+    }
+
+    .dbg-drawer.open { display: flex; }
+
+    .dbg-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--outline);
+    }
+
+    .dbg-body {
+      padding: 8px 10px 10px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .dbg-pre {
+      white-space: break-spaces;
+      overflow-wrap: anywhere;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      background: #f8f9fb;
+      padding: .5rem .75rem;
+      margin: .35rem 0;
+    }
+
+    .pill-ok {
+      background:#e8ffe8;
+      border:1px solid #c6efc6;
+      color:#1e7e1e;
+      border-radius:999px;
+      padding:.1rem .5rem;
+    }
+
+    .pill-bad {
+      background:#ffe8e8;
+      border:1px solid #f3c2c2;
+      color:#8b0000;
+      border-radius:999px;
+      padding:.1rem .5rem;
+    }
+    /* -------------------------
+       Helpdesk popup
+       ------------------------- */
+	#helpPanel {
+	  position: fixed;
+	  bottom: 16px;
+	  right: 16px;
+
+	  /* Fixed size */
+	  width: 380px;
+	  height: 520px;
+
+	  background: #fff;
+	  border-radius: 18px;
+	  border: 1px solid var(--outline);
+	  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+
+	  display: flex;
+	  flex-direction: column;
+	  overflow: hidden;
+	  z-index: 10050;
+	}
+
+
+    #helpPanel[hidden] {
+      display: none;
+    }
+
+    .helpdesk-header {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--outline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .helpdesk-title {
+      font-size: .98rem;
+      font-weight: 600;
+    }
+
+    .helpdesk-sub {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .helpdesk-close-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .helpdesk-close-btn:hover {
+      background: #f2f5f4;
+    }
+
+    .helpdesk-presets {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--outline);
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      max-height: 96px;
+      overflow-y: auto;
+    }
+
+    .helpdesk-chip {
+      appearance: none;
+      border-radius: 999px;
+      border: 1px solid var(--outline);
+      background: #f8fbfa;
+      padding: 4px 8px;
+      font: inherit;
+      font-size: .75rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .helpdesk-chip:hover {
+      background: #eef5f2;
+    }
+
+	.helpdesk-body {
+	  flex: 1 1 auto;
+	  min-height: 0;          /* IMPORTANT: allows flexbox child to scroll */
+	  padding: 10px 12px;
+
+	  background:
+		radial-gradient(900px 500px at 80% -10%, var(--brand-050), transparent 60%),
+		#f8faf9;
+
+	  overflow-y: auto;       /* Scrollbar here */
+	}
+
+
+    .helpdesk-line {
+      max-width: 70%;
+      margin-bottom: 8px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      font-size: .9rem;
+      line-height: 1.4;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .helpdesk-line.user {
+      margin-left: auto;
+      background: #e7f3ff;
+      border: 1px solid #c2d8f5;
+    }
+
+    .helpdesk-line.bot {
+      margin-right: auto;
+      background: #ffffff;
+      border: 1px solid var(--outline);
+    }
+
+    .helpdesk-footer {
+      padding: 8px 10px;
+      border-top: 1px solid var(--outline);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      background: #fff;
+    }
+
+    #helpChatInput {
+      flex: 1 1 auto;
+      border-radius: 999px;
+      border: 1px solid var(--outline);
+      padding: 7px 11px;
+      font: inherit;
+      background: #fff;
+    }
+
+    #helpChatInput:focus {
+      outline: 2px solid var(--brand-050);
+      outline-offset: 1px;
+    }
+
+    #helpChatSend {
+      appearance: none;
+      border-radius: 14px;
+      border: 0;
+      padding: 7px 13px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--brand), var(--brand-600));
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(47,125,95,.25);
+      white-space: nowrap;
+    }
+
+    #helpChatSend:disabled {
+      opacity: .7;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    #helpChatSend:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(47,125,95,.3);
+    }
+
+    .helpdesk-tip {
+      padding: 4px 10px 8px;
+      font-size: .78rem;
+      color: var(--muted);
+      background: #fff;
+      border-top: 1px solid #f1f3f2;
+    }
+
+    .helpdesk-tip code {
+      font-size: .78rem;
+    }
+	
+  </style>
+</head>
+
+<body class="admin">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container site-header__bar" role="navigation" aria-label="Top">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro - Admin</span>
+      </a>
+      <div class="site-header__right">
+        <button id="helpBtn" class="ghost" type="button">Help</button>
+        <button id="logoutBtn" class="ghost" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Top tabs -->
+  <div class="container top-tabs">
+	<div class="site-tabs" role="tablist" aria-label="Admin Sections">
+	  <button class="site-tab" id="tabEmu"      type="button">Emulator</button>
+	  <button class="site-tab" id="tabStaff"    type="button">Staff</button>
+	  <button class="site-tab" id="tabIngr"     type="button">Ingredients</button>
+	  <button class="site-tab" id="tabMenu"     type="button">Menu Items</button>
+	  <button class="site-tab" id="tabInv"      type="button">Inventory</button>
+	  <button class="site-tab" id="tabOrdering" type="button">Ordering</button>
+	  <button class="site-tab" id="tabMix"      type="button">Menu Mix</button>
+	</div>
+
+  </div>
+
+  <!-- Main -->
+  <main id="content" class="container" style="padding:6px 0 0">
+    <div id="alert" class="alert" role="alert"></div>
+
+    <div id="work">
+      <!-- Emulator -->
+      <section id="emSection" aria-label="Emulator">
+        <div class="frame-shell">
+
+          <!-- Emulator toolbar -->
+          <div id="emToolbar">
+            <div class="em-row-inline" style="
+              display:flex;
+              align-items:center;
+              gap:12px;
+              flex-wrap:nowrap;
+              padding:8px 16px;
+              margin:.35rem 0 .7rem;
+              overflow:hidden;
+            ">
+
+              <!-- View tabs -->
+              <nav class="site-tabs em-spacer" role="tablist" aria-label="Emulated Views" style="flex-shrink:0;">
+                <button class="site-tab" id="emTabPatient" role="tab" aria-selected="true" aria-current="page">Patient View</button>
+                <button class="site-tab" id="emTabNurse"   role="tab" aria-selected="false">Nurse View</button>
+                <button class="site-tab" id="emTabRunner"  role="tab" aria-selected="false">Runner View</button>
+                <button class="site-tab" id="emTabKitchen" role="tab" aria-selected="false">Kitchen View</button>
+              </nav>
+
+              <!-- MRN select -->
+              <select class="select em-mrn" title="" style="min-width:300px; flex-shrink:1; white-space:nowrap;">
+                <option value="">Loading…</option>
+              </select>
+
+              <!-- Go button -->
+              <button class="btn primary em-go" type="button" style="flex-shrink:0;">Go</button>
+
+              <!-- Settings gear -->
+              <div class="em-gear" style="position:relative; flex-shrink:0;">
+                <button class="em-gear__btn"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="gearPop"
+                        title="Settings"
+                        style="
+                          display:inline-flex;
+                          align-items:center;
+                          justify-content:center;
+                          width:40px;
+                          height:40px;
+                          border:1px solid var(--outline);
+                          background:#fff;
+                          border-radius:12px;
+                        ">
+                  <svg fill="#2f7d5f" height="200px" width="200px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 490 490" xml:space="preserve" stroke="#2f7d5f"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="XMLID_891_"> <g> <g> <path d="M490,305V185h-69.964c-2.498-7.291-5.453-14.42-8.844-21.34l49.475-49.475l-84.853-84.853L326.34,78.807 c-6.919-3.39-14.051-6.345-21.34-8.843V0H185v69.964c-7.29,2.498-14.42,5.453-21.34,8.843l-49.475-49.475l-84.853,84.853 l49.475,49.475c-3.391,6.92-6.345,14.05-8.843,21.34H0v120h69.964c2.498,7.291,5.453,14.42,8.843,21.34l-49.475,49.475 l84.853,84.853l49.475-49.475c6.92,3.391,14.05,6.345,21.34,8.843V490h120v-69.964c7.29-2.498,14.42-5.453,21.34-8.843 l49.475,49.475l84.853-84.853l-49.475-49.475c3.391-6.919,6.346-14.05,8.844-21.34H490z M418.241,375.815l-42.427,42.426 l-44.187-44.186l-9.944,5.673c-11.206,6.394-23.199,11.364-35.646,14.772L275,397.523V460h-60v-62.477l-11.039-3.022 c-12.445-3.408-24.438-8.378-35.646-14.772l-9.944-5.673l-44.186,44.186l-42.426-42.426l44.186-44.186l-5.673-9.944 c-6.394-11.206-11.364-23.199-14.772-35.646L92.478,275H30v-60h62.478l3.022-11.039c3.408-12.445,8.377-24.438,14.771-35.645 l5.674-9.944l-44.187-44.187l42.426-42.426l44.187,44.187l9.944-5.674c11.207-6.394,23.2-11.364,35.645-14.771L215,92.478V30h60 v62.478l11.039,3.022c12.446,3.408,24.438,8.378,35.645,14.771l9.944,5.674l44.187-44.187l42.427,42.426l-44.187,44.187 l5.674,9.944c6.393,11.205,11.363,23.198,14.772,35.646L397.523,215H460v60h-62.477l-3.022,11.038 c-3.409,12.447-8.38,24.44-14.772,35.646l-5.674,9.944L418.241,375.815z"></path> <path d="M245,150c-52.383,0-95,42.617-95,95s42.617,95,95,95s95-42.617,95-95S297.383,150,245,150z M245,310 c-35.841,0-65-29.159-65-65s29.159-65,65-65s65,29.159,65,65S280.841,310,245,310z"></path> </g> </g> </g> </g></svg>
+                </button>
+
+                <!-- Settings popover -->
+                <div id="gearPop"
+                     class="em-gear__pop"
+                     role="dialog"
+                     aria-label="Emulator settings"
+                     style="
+                       position:fixed;
+                       top:130px;
+                       right:40px;
+                       width:260px;
+                       background:#fff;
+                       border:1px solid var(--outline);
+                       border-radius:12px;
+                       box-shadow:0 8px 24px rgba(0,0,0,.08);
+                       padding:10px 12px;
+                       z-index:999999;
+                       display:none;
+                     ">
+                  <div class="em-gear__item" style="
+                       display:flex;
+                       align-items:center;
+                       justify-content:space-between;
+                       gap:12px;
+                       background:#fff;
+                       border:1px solid var(--outline);
+                       border-radius:12px;
+                       padding:10px 12px;
+                    ">
+                    <span class="label" style="color:var(--muted)">Embed in iframe</span>
+                    <label class="em-switch" title="Toggle embed" style="display:inline-flex;align-items:center;gap:.5rem;">
+                      <input id="embedChk" type="checkbox" role="switch" aria-checked="true" checked />
+                      <span class="track"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Emulator error line -->
+            <div id="emError" class="alert" role="alert" style="display:none; margin:6px 16px 0;"></div>
+          </div>
+
+          <!-- Emulator frame area -->
+          <div class="frame-iframe-wrap" id="emFrameWrap">
+            <iframe class="em-frame frame-iframe fill-frame" id="emFrame" src="about:blank"></iframe>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Admin iframe -->
+      <section id="panelFrame" aria-label="Admin tools">
+        <div class="frame-shell">
+          <div class="frame-iframe-wrap">
+            <iframe id="adminFrame" class="frame-iframe" src="about:blank"></iframe>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>BedsideBistro • admin tools</footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Helpdesk popup -->
+  <div id="helpPanel" hidden>
+    <div class="helpdesk-header">
+      <div>
+        <div class="helpdesk-title">Helpdesk</div>
+        <div class="helpdesk-sub">
+          Say which page you are on, like Admin - Staff or Nurse View, and what you need to do.
+        </div>
+      </div>
+      <button id="helpClose" class="helpdesk-close-btn" type="button" aria-label="Close help chat">×</button>
+    </div>
+
+    <div class="helpdesk-presets">
+      <!-- Patient and nurse flows -->
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="How do I place an order for a patient?">
+        Place patient order
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On Nurse View, how do I start an order for a patient?">
+        Nurse - start order
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="In Kitchen View, how do I move a ticket through the statuses?">
+        Kitchen ticket flow
+      </button>
+
+      <!-- Admin - staff and ingredients -->
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Staff tab, how do I add a new user?">
+        New staff user
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Ingredients tab, how do I add a new ingredient?">
+        New ingredient
+      </button>
+
+      <!-- Admin - menu and inventory -->
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Menu Items tab, how do I set up a new menu item?">
+        New menu item
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Menu Items tab, how do I upload an image for an item?">
+        Upload item image
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Inventory tab, how do I update quantities?">
+        Update inventory
+      </button>
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="On the Ordering page, how do Suggested Ordering and Order Qty work?">
+        Ordering suggestions
+      </button>
+
+      <!-- Command style - add ingredient -->
+      <button type="button" class="helpdesk-chip"
+              data-help-preset="add ingredient Tomato qty 40">
+        Add ingredient command
+      </button>
+    </div>
+
+    <div id="helpChatLog" class="helpdesk-body" aria-live="polite"></div>
+
+    <div class="helpdesk-footer">
+      <input id="helpChatInput"
+             placeholder="Type a question or a command..."
+             autocomplete="off" />
+      <button id="helpChatSend" type="button">Send</button>
+    </div>
+
+    <div class="helpdesk-tip">
+      Tip: to add an ingredient directly you can send a command like
+      <code>add ingredient Roma Tomato qty 30</code>
+    </div>
+  </div>
+
+
+  <!-- Debug button + drawer -->
+  <button id="dbgFab" class="dbg-fab" type="button" aria-controls="dbgDrawer" aria-expanded="false">Debug</button>
+  <div id="dbgDrawer" class="dbg-drawer" role="dialog" aria-label="Debug console">
+    <div class="dbg-head">
+      <strong>Debug</strong>
+      <button id="dbgClose" class="ghost" type="button">Close</button>
+    </div>
+    <div id="dbgBody" class="dbg-body"></div>
+  </div>
+
+  <script>
+  (function(){
+    const q = (s,r=document)=>r.querySelector(s);
+
+    /* -------------------------
+       Layout measurement
+       ------------------------- */
+    function setVar(n,v){ document.documentElement.style.setProperty(n,v); }
+    function measureHeights(){
+      const hdr  = q('.site-header')?.offsetHeight || 0;
+      const tabs = q('.top-tabs')?.offsetHeight   || 0;
+      const foot = q('footer')?.offsetHeight      || 0;
+      const em   = q('#emToolbar')?.offsetHeight  || 0;
+      setVar('--hdr',  hdr  + 'px');
+      setVar('--tabs', tabs + 'px');
+      setVar('--foot', foot + 'px');
+      setVar('--emu',  em   + 'px');
+    }
+    window.addEventListener('resize', measureHeights);
+    window.addEventListener('load', measureHeights);
+    new ResizeObserver(measureHeights).observe(document.body);
+
+    /* -------------------------
+       Toast and alerts
+       ------------------------- */
+    const alertEl = document.getElementById('alert');
+    const toastEl = document.getElementById('toast');
+
+    function showAlert(msg){
+      alertEl.textContent = msg;
+      alertEl.style.display = 'block';
+    }
+    function hideAlert(){
+      alertEl.textContent = '';
+      alertEl.style.display = 'none';
+    }
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(()=>toastEl.classList.remove('show'),1800);
+    }
+
+    /* -------------------------
+       Debug console
+       ------------------------- */
+    const dbgBtn   = document.getElementById('dbgFab');
+    const dbgClose = document.getElementById('dbgClose');
+    const dbgDrawer= document.getElementById('dbgDrawer');
+    const dbgBody  = document.getElementById('dbgBody');
+    const logs     = [];
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function logLine(entry){
+      logs.push(entry);
+      if (logs.length>200) logs.shift();
+      dbgBody.innerHTML = logs.map(e=>{
+        const t=new Date(e.t).toLocaleTimeString();
+        const status=e.ok?`<span class="pill-ok">${e.status}</span>`:`<span class="pill-bad">${e.status}</span>`;
+        const body=e.resBody?`<pre class="dbg-pre">${escapeHtml(e.resBody)}</pre>`:'';
+        return `<div style="margin:.4rem 0">
+          <div><strong>${t}</strong> • <code>${e.method}</code> <code>${e.url}</code> → ${status}</div>
+          ${e.reqBody?`<div>req: <code>${escapeHtml(e.reqBody)}</code></div>`:''}
+          ${body}
+        </div>`;
+      }).join('');
+    }
+    function apiFetch(url, options={}){
+      hideAlert();
+      const method=(options.method||'GET').toUpperCase();
+      const reqBody=options.body||null;
+      return fetch(url, options).then(async res=>{
+        let text=''; try{ text = await res.text(); }catch{}
+        logLine({t:Date.now(),url,method,status:res.status,ok:res.ok,reqBody,resBody:text});
+        if(!res.ok){
+          showAlert(`API error ${res.status} on ${method} ${url}`);
+          throw new Error(String(res.status));
+        }
+        const ct = res.headers.get('content-type') || '';
+        if(res.status===204) return null;
+        if(ct.includes('application/json')){ try{return JSON.parse(text);}catch{return null;} }
+        return text || null;
+      }).catch(err=>{
+        logLine({t:Date.now(),url,method,status:'NETWORK',ok:false,reqBody});
+        throw err;
+      });
+    }
+
+    dbgBtn.addEventListener('click', ()=>{
+      dbgDrawer.classList.toggle('open');
+      dbgBtn.setAttribute('aria-expanded', dbgDrawer.classList.contains('open'));
+    });
+    dbgClose.addEventListener('click', ()=>{
+      dbgDrawer.classList.remove('open');
+      dbgBtn.setAttribute('aria-expanded','false');
+    });
+
+    /* -------------------------
+       Logout
+       ------------------------- */
+    document.getElementById('logoutBtn').addEventListener('click',()=>{
+      sessionStorage.clear();
+      location.replace('/index.html');
+    });
+
+    /* -------------------------
+       Top-level tabs (Emu vs Admin)
+       ------------------------- */
+    const emSection  = document.getElementById('emSection');
+    const framePanel = document.getElementById('panelFrame');
+    const adminFrame = document.getElementById('adminFrame');
+
+	const tabEmu      = document.getElementById('tabEmu');
+	const tabStaff    = document.getElementById('tabStaff');
+	const tabIngr     = document.getElementById('tabIngr');
+	const tabMenu     = document.getElementById('tabMenu');
+	const tabInv      = document.getElementById('tabInv');
+	const tabOrdering = document.getElementById('tabOrdering');
+	const tabMix      = document.getElementById('tabMix');
+
+	const topTabs = [tabEmu, tabStaff, tabIngr, tabMenu, tabInv, tabOrdering, tabMix];
+
+
+    function setTopActive(btn){
+      topTabs.forEach(b=>{
+        if(!b) return;
+        b.classList.remove('site-tab--active');
+        b.setAttribute('aria-selected','false');
+        b.removeAttribute('aria-current');
+      });
+      if(btn){
+        btn.classList.add('site-tab--active');
+        btn.setAttribute('aria-selected','true');
+        btn.setAttribute('aria-current','page');
+      }
+    }
+
+    function showEmulator(){
+      setTopActive(tabEmu);
+      emSection.style.display = 'block';
+      framePanel.style.display = 'none';
+      measureHeights();
+    }
+
+    function showAdminFrame(url, btn){
+      setTopActive(btn);
+      emSection.style.display = 'none';
+      framePanel.style.display = 'block';
+      if(adminFrame){
+        const full = url + (url.indexOf('?') === -1 ? '?embed=1' : '&embed=1');
+        if(adminFrame.src !== full) adminFrame.src = full;
+      }
+    }
+
+    tabEmu .addEventListener('click', e=>{ e.preventDefault(); showEmulator(); });
+    tabStaff.addEventListener('click', e=>{ e.preventDefault(); showAdminFrame('/admin/staff.html?v=2', tabStaff);});
+
+    tabIngr .addEventListener('click', e=>{ e.preventDefault(); showAdminFrame('/admin/ingredients.html', tabIngr); });
+    tabMenu .addEventListener('click', e=>{ e.preventDefault(); showAdminFrame('/admin/menu.html', tabMenu); });
+    tabInv  .addEventListener('click', e=>{ e.preventDefault(); showAdminFrame('/admin/inventory.html', tabInv); });
+	tabOrdering.addEventListener('click', e=>{
+	  e.preventDefault();
+	  showAdminFrame('/admin/ordering.html', tabOrdering);
+	});
+
+	tabMix.addEventListener('click', e=>{
+	  e.preventDefault();
+	  showAdminFrame('/admin/menumix.html', tabMix);
+	});
+	
+
+    // default tab
+    showEmulator();
+
+    /* -------------------------
+       Emulator logic
+       ------------------------- */
+    (function(){
+      const VIEWS = {
+        patient: { path:'/patientview.html',  needsMrn:true  },
+        nurse:   { path:'/nurseview.html',    needsMrn:false },
+        runner:  { path:'/runnerview.html',   needsMrn:false },
+        kitchen: { path:'/kitchenview.html',  needsMrn:false }
+      };
+
+      const gearBtn   = document.querySelector('.em-gear__btn');
+      const gearPop   = document.getElementById('gearPop');
+      const emEmbed   = document.getElementById('embedChk');
+      const emFrame   = document.getElementById('emFrame');
+      const emErr     = document.getElementById('emError');
+      const goBtn     = document.querySelector('.em-go');
+      const tabPatient= document.getElementById('emTabPatient');
+      const tabNurse  = document.getElementById('emTabNurse');
+      const tabRunner = document.getElementById('emTabRunner');
+      const tabKitchen= document.getElementById('emTabKitchen');
+      const mrnSel    = document.querySelector('.em-mrn');
+
+      let current = 'patient';
+      let mrnLoaded = false;
+
+      function setEmView(id){
+        current = id;
+        [tabPatient,tabNurse,tabRunner,tabKitchen].forEach(b=>{
+          const on =
+            (id==='patient' && b===tabPatient) ||
+            (id==='nurse'   && b===tabNurse)   ||
+            (id==='runner'  && b===tabRunner)  ||
+            (id==='kitchen' && b===tabKitchen);
+
+          b.setAttribute('aria-selected', on?'true':'false');
+          if(on) b.setAttribute('aria-current','page');
+          else   b.removeAttribute('aria-current');
+        });
+
+        const needs = VIEWS[current].needsMrn;
+        mrnSel.disabled = !needs;
+        if(needs){
+          if(!mrnLoaded) loadMrns();
+          mrnSel.title = '';
+        }else{
+          mrnSel.title = 'MRN not required for this view';
+        }
+      }
+
+      tabPatient.addEventListener('click',()=>setEmView('patient'));
+      tabNurse  .addEventListener('click',()=>setEmView('nurse'));
+      tabRunner .addEventListener('click',()=>setEmView('runner'));
+      tabKitchen.addEventListener('click',()=>setEmView('kitchen'));
+      setEmView('patient');
+
+      gearBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const rect = gearBtn.getBoundingClientRect();
+        gearPop.style.position = "fixed";
+        gearPop.style.top  = (rect.bottom + 6) + "px";
+        gearPop.style.left = (rect.left - 220) + "px";  // 260 width - 40 btn
+        gearPop.style.display = gearPop.style.display === "block" ? "none" : "block";
+      });
+
+      document.addEventListener('click', e => {
+        if (!gearPop.contains(e.target) && e.target !== gearBtn) {
+          gearPop.style.display = 'none';
+          gearBtn.setAttribute('aria-expanded', false);
+        }
+      });
+
+      emEmbed.addEventListener('change',()=>{
+        emEmbed.setAttribute('aria-checked', emEmbed.checked?'true':'false');
+      });
+
+      async function loadMrns(){
+        mrnLoaded = true;
+        mrnSel.innerHTML = '<option value="">Loading…</option>';
+        try{
+          const data = await apiFetch('/api/admissions/active');
+          const rows = Array.isArray(data) ? data : (data?.items || data?.results || []);
+          const opts = rows.map(p=>{
+            const mrn  = p.mrn || p.MRN;
+            if(!mrn) return '';
+            const name = formatName(p.name || p.PatientName || '');
+            const room = p.room || p.RoomNumber || '';
+            return `<option value="${mrn}">${mrn} - ${name}${room ? ` (${String(room)})` : ''}</option>`;
+          }).join('');
+          mrnSel.innerHTML = opts || '<option value="">No active patients found</option>';
+        }catch{
+          mrnSel.innerHTML = '<option value="">Failed to load patients</option>';
+        }
+      }
+
+      function formatName(raw){
+        const s = (raw || '').trim();
+        if(!s) return '';
+        const parts = s.split(/\s+/);
+        if(parts.length === 1) return parts[0];
+        const first = parts[0];
+        const last  = parts.slice(1).join(' ');
+        return `${last}, ${first.charAt(0).toUpperCase()}.`;
+      }
+
+      function buildUrl(){
+        const base   = location.origin;
+        const file   = VIEWS[current].path;
+        const needs  = VIEWS[current].needsMrn;
+        const mrnVal = (mrnSel.value || '').trim();
+
+        if(needs && !mrnVal) throw new Error('Select a patient first.');
+
+        const qs = new URLSearchParams();
+        if(needs) qs.set('mrn', mrnVal);
+        qs.set('by','admin');
+        if(emEmbed.checked) qs.set('embed','1');
+
+        return base + file + '?' + qs.toString();
+      }
+
+      goBtn.addEventListener('click',()=>{
+        emErr.style.display = 'none';
+        emErr.textContent   = '';
+        let url;
+        try{
+          url = buildUrl();
+        }catch(err){
+          emErr.textContent = err.message || 'Missing selection';
+          emErr.style.display = 'block';
+          return;
+        }
+
+        if(emEmbed.checked){
+          emFrame.src = 'about:blank';
+          const fallback = setTimeout(()=>{
+            emErr.textContent = 'Unable to load in an embedded window. Try turning off Embed.';
+            emErr.style.display = 'block';
+          }, 3500);
+          emFrame.onload = ()=>{
+            clearTimeout(fallback);
+            emErr.style.display = 'none';
+          };
+          emFrame.src = url;
+        }else{
+          window.open(url,'_blank','noopener');
+        }
+      });
+    })();
+
+    /* -------------------------
+       Helpdesk popup chat
+       ------------------------- */
+    (function () {
+      const helpBtn     = document.getElementById('helpBtn');
+      const helpPanel   = document.getElementById('helpPanel');
+      const helpClose   = document.getElementById('helpClose');
+      const chatLog     = document.getElementById('helpChatLog');
+      const chatInput   = document.getElementById('helpChatInput');
+      const chatSend    = document.getElementById('helpChatSend');
+      const presetBtns  = document.querySelectorAll('[data-help-preset]');
+      const API_URL     = '/api/helpchat';
+
+      function addLine(text, who) {
+        const div = document.createElement('div');
+        div.className = 'helpdesk-line ' + (who === 'user' ? 'user' : 'bot');
+        div.textContent = text;
+        chatLog.appendChild(div);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        addLine(text, 'user');
+        chatInput.value = '';
+        chatInput.focus();
+
+        chatSend.disabled = true;
+        chatSend.textContent = '...';
+
+        try {
+          const data = await apiFetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+
+          const reply = data && data.reply
+            ? data.reply
+            : 'Sorry, I could not answer that.';
+          addLine(reply, 'bot');
+        } catch (err) {
+          addLine('The helpdesk service is unreachable right now.', 'bot');
+        } finally {
+          chatSend.disabled = false;
+          chatSend.textContent = 'Send';
+        }
+      }
+
+      // Open and close
+      helpBtn.addEventListener('click', () => {
+        const wasHidden = helpPanel.hidden;
+        helpPanel.hidden = !wasHidden;
+        if (!helpPanel.hidden) {
+          chatInput.focus();
+        }
+      });
+
+      helpClose.addEventListener('click', () => {
+        helpPanel.hidden = true;
+      });
+
+      // Send actions
+      chatSend.addEventListener('click', sendMessage);
+
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Preset buttons from helpdesk.html
+      presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const text = btn.getAttribute('data-help-preset') || '';
+          if (!text) return;
+          chatInput.value = text;
+          chatInput.focus();
+        });
+      });
+
+      // Initial greeting like helpdesk.html
+      addLine('Hello!  How can I assist you?', 'bot');
+    })();
+
+  })();
+  </script>
+</body>
+</html>

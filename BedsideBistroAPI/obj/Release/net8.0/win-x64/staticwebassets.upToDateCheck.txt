@@ -1,0 +1,13 @@
+wwwroot\foodrunner.html
+wwwroot\index.html
+wwwroot\itemcustomization.html
+wwwroot\kitchenview.html
+wwwroot\mainpage.html
+wwwroot\menuedit.html
+wwwroot\nurseorder.html
+wwwroot\nurseview.html
+wwwroot\orderprogress.html
+wwwroot\ordersummary.html
+wwwroot\staffedit.html
+wwwroot\stafflogin.html
+wwwroot\userprofile.html

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ordering Suggestions</title>
+  <link rel="stylesheet" href="/global.css" />
+  <style>
+    body {
+      background: var(--bg);
+      padding: 30px;
+      font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .list-wrap {
+      margin-top: 20px;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+    }
+
+    table.order-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    table.order-grid th,
+    table.order-grid td {
+      padding: 8px 10px;
+    }
+
+    table.order-grid th {
+      text-align: left;
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text);
+    }
+
+    .row {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--outline);
+    }
+
+    .row td:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+
+    .row td:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .ing-name {
+      font-weight: 600;
+    }
+
+	.qty {
+	  font-variant-numeric: tabular-nums;
+	  text-align: center;
+	}
+
+	.order-input {
+	  width: 110px;
+	  border: 1px solid var(--outline);
+	  border-radius: 10px;
+	  padding: 6px 8px;
+	  font: inherit;
+	  text-align: center;
+	}
+
+    .hint {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .ghost {
+      appearance: none;
+      border: 1px solid var(--outline);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+    }
+    .ghost:hover { background:#f7faf9; }
+
+    .btn {
+      appearance: none;
+      border-radius: 14px;
+      border: 0;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg,var(--brand),var(--brand-600));
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(47,125,95,.25);
+    }
+    .btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(47,125,95,.3);
+    }
+
+    .order-footer {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .order-summary {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-size: .9rem;
+    }
+
+    .order-summary strong {
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header-row">
+      <button id="btnRefresh" class="ghost" type="button">Refresh</button>
+    </div>
+
+    <div class="list-wrap">
+      <table class="order-grid">
+        <thead>
+          <tr>
+            <th style="width:45%">Ingredient</th>
+            <th style="width:20%; text-align:center;">Current Qty</th>
+            <th style="width:20%; text-align:center;">Suggested Ordering</th>
+            <th style="width:15%"> Order Qty</th>
+          </tr>
+        </thead>
+        <tbody id="orderBody"></tbody>
+      </table>
+      <div class="order-footer">
+        <div class="hint">
+          Suggested Ordering is the total count of that ingredient used on non cancelled orders.
+        </div>
+        <div class="order-summary">
+          <span>Total pieces:</span>
+          <strong id="totalPieces">0</strong>
+          <button id="btnSubmitOrder" class="btn primary" type="button">Submit Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------
+       API endpoint
+       ------------------------- */
+    const API_URL = '/api/inventory/ordering';
+
+    /* -------------------------
+       DOM refs
+       ------------------------- */
+    const q = s => document.querySelector(s);
+    const tbody         = q('#orderBody');
+    const btnRefresh    = q('#btnRefresh');
+    const btnSubmit     = q('#btnSubmitOrder');
+    const totalPiecesEl = q('#totalPieces');
+
+    /* -------------------------
+       Fetch helper
+       ------------------------- */
+    async function api(url) {
+      const res = await fetch(url, { headers: { 'Accept':'application/json' } });
+      let text = await res.text();
+      try { text = JSON.parse(text); } catch {}
+      if (!res.ok) throw text || 'API error';
+      return text;
+    }
+
+    /* -------------------------
+       Load ordering data
+       ------------------------- */
+    async function loadOrdering() {
+      tbody.innerHTML = `<tr><td colspan="4">Loading…</td></tr>`;
+      try {
+        const rows = await api(API_URL);
+        if (!rows || !rows.length) {
+          tbody.innerHTML = `<tr><td colspan="4">No ingredients found.</td></tr>`;
+          totalPiecesEl.textContent = '0';
+          return;
+        }
+        tbody.innerHTML = '';
+        rows.forEach(r => tbody.appendChild(renderRow(r)));
+        recalcTotalPieces();
+      } catch (err) {
+        console.error('loadOrdering error', err);
+        tbody.innerHTML = `<tr><td colspan="4">Unable to load ordering suggestions.</td></tr>`;
+        totalPiecesEl.textContent = '0';
+      }
+    }
+
+    /* -------------------------
+       Render one row
+       ------------------------- */
+    function renderRow(r) {
+      const name      = r.Name ?? r.name ?? r.strIngredient ?? 'Ingredient';
+      const current   = r.CurrentQty ?? r.currentQty ?? r.Quantity ?? 0;
+      const suggested = r.SuggestedQty ?? r.suggestedQty ?? 0;
+
+      const tr = document.createElement('tr');
+      tr.className = 'row';
+
+      const tdName = document.createElement('td');
+      tdName.className = 'ing-name';
+      tdName.textContent = name;
+
+      const tdCurrent = document.createElement('td');
+      tdCurrent.className = 'qty';
+      tdCurrent.textContent = current;
+
+      const tdSuggested = document.createElement('td');
+      tdSuggested.className = 'qty';
+      tdSuggested.textContent = suggested;
+
+      const tdOrder = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.step = '1';
+      input.className = 'order-input';
+      input.addEventListener('input', recalcTotalPieces);
+      tdOrder.appendChild(input);
+
+      tr.append(tdName, tdCurrent, tdSuggested, tdOrder);
+      return tr;
+    }
+
+    /* -------------------------
+       Recalculate total pieces
+       ------------------------- */
+    function recalcTotalPieces() {
+      const inputs = tbody.querySelectorAll('.order-input');
+      let total = 0;
+      inputs.forEach(inp => {
+        const v = inp.value.trim();
+        if (!v) return;
+        const n = Number(v);
+        if (Number.isFinite(n) && n > 0) total += n;
+      });
+      totalPiecesEl.textContent = total;
+    }
+
+    /* -------------------------
+       Submit order -> print sheet
+       ------------------------- */
+    function submitOrder() {
+      const rows = Array.from(tbody.querySelectorAll('.row'));
+      const items = [];
+
+      rows.forEach(tr => {
+        const nameCell = tr.querySelector('.ing-name');
+        const input = tr.querySelector('.order-input');
+        if (!nameCell || !input) return;
+
+        const name = nameCell.textContent.trim();
+        const v = input.value.trim();
+        if (!v) return;
+
+        const qty = Number(v);
+        if (!Number.isFinite(qty) || qty <= 0) return;
+
+        items.push({ name, qty });
+      });
+
+      if (!items.length) {
+        alert('No order quantities entered. Enter an Order Qty for at least one ingredient.');
+        return;
+      }
+
+      const total = items.reduce((sum, it) => sum + it.qty, 0);
+      totalPiecesEl.textContent = total;
+
+      const today = new Date();
+      const dateStr = today.toLocaleDateString(undefined, {
+        year:'numeric', month:'short', day:'numeric'
+      });
+
+      const tableRows = items
+        .map(it => `<tr><td>${escapeHtml(it.name)}</td><td style="text-align:right;">${it.qty}</td></tr>`)
+        .join('');
+
+      const printHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Order Sheet</title>
+  <style>
+    body {
+      font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
+      color:#111;
+      margin:24px;
+    }
+    h1 {
+      font-size:1.4rem;
+      margin-bottom:4px;
+    }
+    .sub {
+      font-size:.9rem;
+      color:#555;
+      margin-bottom:16px;
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+    }
+    th, td {
+      padding:6px 8px;
+      border-bottom:1px solid #ddd;
+      font-size:.95rem;
+    }
+    th {
+      text-align:left;
+      font-weight:700;
+    }
+    td:last-child, th:last-child {
+      text-align:right;
+    }
+    .total-row td {
+      font-weight:700;
+      border-top:2px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Order Sheet</h1>
+  <div class="sub">Date: ${escapeHtml(dateStr)} • Total pieces: ${total}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Ingredient</th>
+        <th>Order Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+      <tr class="total-row">
+        <td>Total</td>
+        <td>${total}</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>`;
+
+      const w = window.open('', '_blank');
+      if (!w) {
+        alert('Pop-up blocked. Please allow pop-ups to print the order.');
+        return;
+      }
+      w.document.open();
+      w.document.write(printHtml);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[m]));
+    }
+
+    /* -------------------------
+       Embed padding
+       ------------------------- */
+    (function(){
+      const params = new URLSearchParams(location.search);
+      if (params.get('embed') === '1') {
+        document.body.style.paddingTop = '10px';
+      }
+    })();
+
+    /* -------------------------
+       Events
+       ------------------------- */
+    btnRefresh.addEventListener('click', loadOrdering);
+    btnSubmit.addEventListener('click', submitOrder);
+
+    /* -------------------------
+       Initial load
+       ------------------------- */
+    loadOrdering();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Order Summary</title>
+  <link rel="stylesheet" href="global.css" />
+</head>
+<body class="ordersummary">
+  <a href="#content" class="sr-only">Skip to content</a>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container site-header__bar" role="navigation" aria-label="Top">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+
+      <label class="site-search" aria-label="Search menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input id="searchBox" type="search" name="q" placeholder="Search meals, ingredients, allergens…" />
+      </label>
+
+      <!-- Cart button (anchor, accessible, badge supported) -->
+      <a class="site-cart" id="cartLink" href="ordersummary.html" aria-label="Open cart" data-count="0">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M7 18a2 2 0 1 0 2 2 2 2 0 0 0-2-2zm10 0a2 2 0 1 0 2 2 2 2 0 0 0-2-2zM7.16 6l.84 2h9.42a1 1 0 0 1 .96 1.28l-1.6 5.6A2 2 0 0 1 14.86 16H9.14a2 2 0 0 1-1.92-1.12L5.1 6.76A1 1 0 0 0 4.16 6H3V4h2.34a2 2 0 0 1 1.82 1.2z"/>
+        </svg>
+        <span class="sr-only">Cart</span>
+        <span class="site-cart__badge" aria-hidden="true">0</span>
+      </a>
+
+      <!-- Profile button (anchor) -->
+      <a class="site-profile" id="profileLink" href="userprofile.html" aria-label="Open profile menu">
+        <div class="site-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+          </svg>
+        </div>
+        <span class="sr-only">Profile</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="content" class="container" style="margin-top:10px">
+    <!-- Breadcrumb -->
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a id="crumbMenu" href="patientview.html">Menu</a> <span class="sep">›</span>
+      <a id="crumbRecs" href="#">Recommendations</a> <span class="sep">›</span>
+      <span aria-current="page">Order Summary</span>
+    </nav>
+
+    <div class="layout">
+      
+
+      <!-- LEFT: Items in order -->
+      <section class="panel">
+        <div class="pad">
+          <div class="section-head">
+            <h2>Your items</h2>
+            <div class="hint">Review items & alterations</div>
+          </div>
+
+          <!-- status / messages injected here -->
+          
+
+          <div class="items" role="list">
+            
+            <div id="orderError" class="hint" style="color:#b00020;display:none;margin:4px 0;"></div>
+            <div id="orderStatusMsg" class="hint"></div>
+            <div id="orderItems" role="list"></div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Total order nutrition -->
+      <aside class="panel totals" aria-label="Total order nutrition">
+        <div class="pad">
+          <div class="section-head">
+            <h2>Order nutrition</h2>
+            <div class="hint">Totals across all items</div>
+          </div>
+
+          <div class="facts" id="factsTotals">
+            <div class="fact"><span>Total Calories</span> <strong id="totCal">—</strong></div>
+            <div class="fact"><span>Total Protein</span> <strong id="totPro">—</strong></div>
+            <div class="fact"><span>Total Sodium</span> <strong id="totNa">—</strong></div>
+            <div class="fact"><span>Total Carbs</span> <strong id="totCarb">—</strong></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <span class="pill">Low-sodium choices highlighted</span>
+            <span class="pill">Hydration included</span>
+          </div>
+
+          <button class="cta" type="button" aria-label="Place order" id="placeOrderBtn" disabled>
+            Place Order
+          </button>
+          <div class="fine">Prototype only — button does not submit.</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+(() => {
+  // =========================
+  // 0) same-origin API calls
+  // =========================
+  const BASE = ''; // leave '' if page + API share host. if not, set absolute base.
+
+  // Nice fetch wrapper so 4xx/5xx show a readable message
+  async function fetchJson(url, opts) {
+    const res = await fetch(BASE + url, opts);
+    let bodyText = '';
+    try { bodyText = await res.text(); } catch {}
+    let data = null;
+    try { data = bodyText ? JSON.parse(bodyText) : null; } catch {}
+    if (!res.ok) {
+      const msg = (data && (data.title || data.error || data.message)) || bodyText || `HTTP ${res.status}`;
+      const err = new Error(`${res.status} ${res.statusText} – ${msg}`);
+      err.status = res.status;
+      err.body = bodyText;
+      throw err;
+    }
+    return data ?? {};
+  }
+
+  // =========================
+  // 1) DOM refs
+  // =========================
+  const errorEl   = document.getElementById('orderError');
+  const statusEl  = document.getElementById('orderStatusMsg');
+  const itemsEl   = document.getElementById('orderItems');
+  const cartLink  = document.getElementById('cartLink');
+  const cartBadge = cartLink?.querySelector('.site-cart__badge');
+  const crumbMenu = document.getElementById('crumbMenu');
+
+  if (!errorEl || !statusEl || !itemsEl) return;
+
+  // =========================
+  // 2) state (MRN)
+  // =========================
+  const qs   = new URLSearchParams(location.search);
+  const mrnQ = (qs.get('mrn') || '').trim();
+  const mrnS = (sessionStorage.getItem('mrn') || '').trim();
+  const MRN  = (mrnQ || mrnS || '').toUpperCase();
+  if (MRN) sessionStorage.setItem('mrn', MRN);
+  if (crumbMenu && MRN) crumbMenu.href = `patientview.html?mrn=${encodeURIComponent(MRN)}`;
+
+  // =========================
+  // 3) tiny helpers
+  // =========================
+  const showError = (m)=>{ errorEl.textContent=m; errorEl.style.display='block'; };
+  const hideError = ()=>{ errorEl.style.display='none'; };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const fmt = d => { try { return new Date(d).toLocaleString(); } catch { return '—'; } };
+
+  function updateCartBadge(items){
+    if (!cartBadge) return;
+    const count = Array.isArray(items) ? items.reduce((sum, it) => sum + (it.Qty ?? it.intQty ?? it.qty ?? 1), 0) : 0;
+    cartBadge.textContent = String(count);
+    cartLink?.setAttribute('data-count', String(count));
+  }
+
+  // Safely grab an order id regardless of serializer weirdness
+  function pickOrderId(obj) {
+    if (!obj || typeof obj !== 'object') return undefined;
+    const direct =
+      obj.OrderID ?? obj.orderID ?? obj.orderId ??
+      obj.intOrderID ?? obj.IntOrderID ??
+      obj.id ?? obj.ID;
+    if (direct != null) return direct;
+    const k = Object.keys(obj).find(k => /order.*id/i.test(k));
+    return k ? obj[k] : undefined;
+  }
+
+  // =========================
+  // 4) render
+  // =========================
+  function renderHeader(h){
+    // support camelCase / PascalCase
+    const MRN           = h.MRN ?? h.mrn;
+    const OrderID       = h.OrderID ?? h.orderID ?? h.orderId ?? h.intOrderID ?? h.id;
+    const Status        = h.Status ?? h.status;
+    const MealPeriod    = (h.MealPeriod ?? h.mealPeriod) ?? '—';
+    const PlacedOn      = h.PlacedOn ?? h.placedOn;
+    const RequestedFor  = h.RequestedFor ?? h.requestedFor;
+    const DeliveredOn   = h.DeliveredOn ?? h.deliveredOn;
+
+    statusEl.innerHTML = `
+      <div style="margin:0 0 .75rem 0">
+        <strong>MRN:</strong> ${esc(MRN)} &nbsp;•&nbsp;
+        <strong>Order #</strong> ${OrderID} &nbsp;•&nbsp;
+        <strong>Status:</strong> ${esc(Status)} &nbsp;•&nbsp;
+        <strong>Meal:</strong> ${esc(MealPeriod)}<br>
+        <strong>Placed:</strong> ${fmt(PlacedOn)} &nbsp;•&nbsp;
+        <strong>Requested For:</strong> ${RequestedFor ? fmt(RequestedFor) : '—'} &nbsp;•&nbsp;
+        <strong>Delivered:</strong> ${DeliveredOn ? fmt(DeliveredOn) : '—'}
+      </div>`;
+  }
+
+  function renderItems(items){
+    itemsEl.innerHTML = '';
+    if (!items?.length) {
+      itemsEl.innerHTML = `<div style="color:var(--muted)">No items on this order.</div>`;
+      updateCartBadge([]);
+      return;
+    }
+    for (const it of items) {
+      const name = it.ItemName ?? it.strItemName ?? it.itemName ?? 'Item';
+      const q    = it.Qty ?? it.intQty ?? it.qty ?? 1;
+      const note = it.SpecialInstr ?? it.strSpecialInstr ?? it.specialInstr ?? '';
+      const row  = document.createElement('div');
+      row.setAttribute('role','listitem');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--outline);border-radius:10px;padding:.75rem 1rem;margin:.5rem 0;';
+      row.innerHTML = `
+        <div>
+          <div style="font-weight:600">${esc(name)}</div>
+          ${note ? `<div style="color:var(--muted);font-size:.9em">${esc(note)}</div>` : ''}
+        </div>
+        <div><strong>x${q}</strong></div>`;
+      itemsEl.appendChild(row);
+    }
+    updateCartBadge(items);
+  }
+
+  // =========================
+  // 5) data flow (GET-only)
+  // =========================
+  async function loadNewestForMrn(m) {
+    hideError();
+    statusEl.textContent = 'Loading…';
+    itemsEl.innerHTML = '';
+
+    const list = await fetchJson(`/api/orders?mrn=${encodeURIComponent(m)}`, {
+      headers:{ Accept:'application/json' }
+    });
+    // log once so we can see the exact shape when debugging
+    console.log('orders list (debug):', list);
+
+    if (!Array.isArray(list) || list.length === 0) {
+      statusEl.textContent = 'No orders found for this MRN.';
+      updateCartBadge([]);
+      return;
+    }
+
+    const first = list[0];
+    const orderId = pickOrderId(first);
+    if (orderId == null) {
+      console.error('First order shape:', first);
+      throw new Error('Could not determine OrderID from API payload.');
+    }
+
+    const full = await fetchJson(`/api/orders/${orderId}`, {
+      headers:{ Accept:'application/json' }
+    }); // { header, items }
+
+    renderHeader(full.header ?? full.Header ?? {});
+    renderItems(full.items ?? full.Items ?? []);
+  }
+
+  // =========================
+  // 6) init
+  // =========================
+  (async function init(){
+    if (!MRN) { showError('Add ?mrn= to the URL (or log in so MRN is in sessionStorage).'); return; }
+    try {
+      await loadNewestForMrn(MRN);
+    } catch (e) {
+      showError(e.message || 'Failed to load order.');
+      statusEl.textContent = 'Error.';
+      itemsEl.innerHTML = '';
+      console.error('API error:', e);
+    }
+  })();
+})();
+</script>
+
+
+
+ 
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory</title>
+  <link rel="stylesheet" href="/global.css" />
+  <style>
+    body {
+      background: var(--bg);
+      padding: 30px;
+      font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .list-wrap {
+      margin-top: 20px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    table.inv-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    table.inv-grid th,
+    table.inv-grid td {
+      padding: 8px 10px;
+    }
+
+    table.inv-grid th {
+      text-align: left;
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text);
+    }
+
+    .inv-row {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--outline);
+    }
+
+    .inv-row td:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+    .inv-row td:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .inv-name {
+      font-weight: 600;
+    }
+
+    .inv-qty {
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+
+    .inv-input {
+      width: 110px;
+      border: 1px solid var(--outline);
+      border-radius: 10px;
+      padding: 6px 8px;
+      font: inherit;
+    }
+
+    /* Buttons */
+    .btn {
+      appearance: none;
+      border-radius: 14px;
+      border: 0;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg,var(--brand),var(--brand-600));
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(47,125,95,.25);
+    }
+    .btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(47,125,95,.3);
+    }
+
+    .ghost {
+      appearance: none;
+      border: 1px solid var(--outline);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+    }
+    .ghost:hover { background:#f7faf9; }
+
+    .hint {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header-row">
+      <button id="btnRefresh" class="ghost" type="button">Refresh</button>
+      <button id="btnSubmit" class="btn primary" type="button">Submit Changes</button>
+    </div>
+
+    <div class="list-wrap">
+      <table class="inv-grid" aria-describedby="invHelp">
+        <thead>
+          <tr>
+            <th style="width:55%">Ingredient</th>
+            <th style="width:20%">Current Qty</th>
+            <th style="width:25%">New Qty</th>
+          </tr>
+        </thead>
+        <tbody id="invBody"></tbody>
+      </table>
+      <div id="invHelp" class="hint">
+        Enter a New Qty only for items you want to change. Leave blank to skip.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------
+       API endpoints
+       ------------------------- */
+    const API = {
+      list:  '/api/inventory',
+      bulk:  '/api/inventory'
+    };
+
+    /* -------------------------
+       DOM refs
+       ------------------------- */
+    const q = s => document.querySelector(s);
+    const invBody    = q('#invBody');
+    const btnRefresh = q('#btnRefresh');
+    const btnSubmit  = q('#btnSubmit');
+
+    /* -------------------------
+       Fetch wrapper
+       ------------------------- */
+    async function api(url, options = {}) {
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        ...options
+      });
+      let text = await res.text();
+      try { text = JSON.parse(text); } catch {}
+      if (!res.ok) throw text || 'API error';
+      return text;
+    }
+
+    /* -------------------------
+       Load inventory list
+       ------------------------- */
+    async function loadInventory() {
+      invBody.innerHTML = `<tr><td colspan="3">Loading…</td></tr>`;
+      try {
+        const rows = await api(API.list);
+        if (!rows || !rows.length) {
+          invBody.innerHTML = `<tr><td colspan="3">No inventory records found.</td></tr>`;
+          return;
+        }
+        invBody.innerHTML = '';
+        rows.forEach(r => invBody.appendChild(renderRow(r)));
+      } catch (err) {
+        console.error('loadInventory error', err);
+        invBody.innerHTML = `<tr><td colspan="3">Unable to load inventory.</td></tr>`;
+      }
+    }
+
+    /* -------------------------
+       Render one row
+       ------------------------- */
+    function renderRow(r) {
+      const id   = r.intIngredientID ?? r.Id ?? r.id;
+      const name = r.strIngredient   ?? r.Name ?? r.name ?? 'Ingredient';
+      const qty  = r.intQty          ?? r.Quantity ?? r.quantity ?? 0;
+
+      const tr = document.createElement('tr');
+      tr.className = 'inv-row';
+      tr.dataset.id = String(id);
+      tr.dataset.currentQty = String(qty);
+
+      const tdName = document.createElement('td');
+      tdName.className = 'inv-name';
+      tdName.textContent = name;
+
+      const tdCurrent = document.createElement('td');
+      tdCurrent.className = 'inv-qty';
+      tdCurrent.textContent = qty;
+
+      const tdInput = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.step = '1';
+      input.className = 'inv-input';
+      input.placeholder = '';
+      tdInput.appendChild(input);
+
+      tr.append(tdName, tdCurrent, tdInput);
+      return tr;
+    }
+
+    /* -------------------------
+       Submit changes (bulk PUT)
+       ------------------------- */
+    async function submitChanges() {
+      const rows = Array.from(invBody.querySelectorAll('.inv-row'));
+      const patches = [];
+
+      rows.forEach(row => {
+        const id = Number(row.dataset.id);
+        const current = Number(row.dataset.currentQty);
+        const input = row.querySelector('.inv-input');
+        const val = input.value.trim();
+        if (!val) return;
+
+        const next = Number(val);
+        if (!Number.isFinite(next) || next < 0) return;
+
+        if (next !== current) {
+          patches.push({ Id: id, Quantity: next });
+        }
+      });
+
+      if (!patches.length) {
+        alert('No changes to submit. Enter a New Qty for at least one item.');
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Saving…';
+
+      try {
+        const result = await api(API.bulk, {
+          method: 'PUT',
+          body: JSON.stringify(patches)
+        });
+        console.log('bulk update result', result);
+        await loadInventory();
+        alert('Inventory updated.');
+      } catch (err) {
+        console.error('submitChanges error', err);
+        const msg = (err && err.message) || (err && err.error) || 'Unable to update inventory.';
+        alert(msg);
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Submit Changes';
+      }
+    }
+
+    /* -------------------------
+       Embed-mode tweaks
+       ------------------------- */
+    (function(){
+      const params = new URLSearchParams(location.search);
+      if (params.get('embed') === '1') {
+        document.body.style.paddingTop = '10px';
+      }
+    })();
+
+    /* -------------------------
+       Events
+       ------------------------- */
+    btnRefresh.addEventListener('click', loadInventory);
+    btnSubmit.addEventListener('click', submitChanges);
+
+    /* -------------------------
+       Initial load
+       ------------------------- */
+    loadInventory();
+  </script>
+
+</body>
+</html>

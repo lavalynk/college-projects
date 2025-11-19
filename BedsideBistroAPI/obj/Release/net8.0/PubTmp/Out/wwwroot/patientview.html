@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro - Menu</title>
+  <link rel="stylesheet" href="global.css" />
+  
+</head>
+<body class="patientview">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container site-header__bar" role="navigation" aria-label="Top">
+      <a class="site-brand" href="index.html">
+        <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+        <span class="site-brand__text">BedsideBistro</span>
+      </a>
+
+      <label class="site-search" aria-label="Search menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-1-1-6z"/>
+        </svg>
+        <input id="searchBox" type="search" placeholder="Search meals, ingredients, allergens…" />
+      </label>
+
+      <a class="site-cart" id="cartLink" href="ordersummary.html" aria-label="Open cart" data-count="0">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M7 18a2 2 0 1 0 2 2 2 2 0 0 0-2-2zm10 0a2 2 0 1 0 2 2 2 2 0 0 0-2-2zM7.16 6l.84 2h9.42a1 1 0 0 1 .96 1.28l-1.6 5.6A2 2 0 0 1 14.86 16H9.14a2 2 0 0 1-1.92-1.12L5.1 6.76A1 1 0 0 0 4.16 6H3V4h2.34a2 2 0 0 1 1.82 1.2z"/>
+        </svg>
+        <span class="sr-only">Cart</span>
+        <span class="site-cart__badge" aria-hidden="true">0</span>
+      </a>
+
+      <a class="site-profile" id="fProfile" href="userprofile.html" aria-label="Open profile menu">
+        <div class="site-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+          </svg>
+        </div>
+        <span class="sr-only">Profile</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Tabs (no All) -->
+  <div class="container">
+    <div class="site-tabs" role="tablist" aria-label="Menu categories" id="categoryTabs">
+      <button class="site-tab" role="tab" data-filter="breakfast" aria-selected="false">Breakfast</button>
+      <button class="site-tab" role="tab" data-filter="lunch"      aria-selected="false">Lunch</button>
+      <button class="site-tab" role="tab" data-filter="dinner"     aria-selected="false">Dinner</button>
+      <button class="site-tab" role="tab" data-filter="drink"      aria-selected="false">Drink</button>
+      <button class="site-tab" role="tab" data-filter="side"       aria-selected="false">Side</button>
+      <button class="site-tab" role="tab" data-filter="dessert"    aria-selected="false">Dessert</button>
+    </div>
+  </div>
+
+  <main id="content" class="container" aria-live="polite">
+    <div class="section-head">
+      <h2 id="sectionTitle">Menu</h2>
+
+      <!-- centered allergen banner -->
+      <div id="allergyBanner" class="muted">
+        <span class="label">Your recorded allergens:</span>
+        <span id="allergenChips"></span>
+      </div>
+
+      <div id="hiddenNote" class="sumline is-hidden"></div>
+    </div>
+
+    <section class="grid" id="menuGrid" aria-label="Recommended menu items"></section>
+
+    <div id="menuError" class="alert" role="alert" hidden>
+      Unable to load the menu right now. Please try again later.
+    </div>
+  </main>
+
+  <footer>Prototype UI · BedsideBistro</footer>
+
+<script>
+(function(){
+  /* ------------ config ------------ */
+  const USING_FILE = location.protocol === 'file:';
+  const BASE = USING_FILE ? 'https://bedsidebistroapi.winhost.com' : '';
+  const api = p => `${BASE}${p}`;
+
+  const params = new URLSearchParams(location.search);
+  const MRN = params.get('mrn') || '';
+
+  // persist MRN in header links
+  const cartA = document.getElementById('cartLink');
+  const profA = document.getElementById('fProfile');
+  if (cartA) cartA.href = withParams('ordersummary.html', { mrn: MRN });
+  if (profA) profA.href = withParams('userprofile.html', { mrn: MRN });
+
+  function withParams(baseUrl, extra = {}) {
+    const url = new URL(baseUrl, location.origin);
+    const p   = new URLSearchParams(url.search);
+    Object.entries(extra).forEach(([k,v]) => { if (v!==undefined && v!==null && v!=='') p.set(v===true? k : k, v); });
+    url.search = p.toString();
+    return url.pathname + (p.toString() ? '?' + p.toString() : '');
+  }
+
+  /* ------------ daypart logic ------------ */
+  const DAYPARTS = {
+    breakfast: { start: 0,  end: 10 }, // 12 AM - 10 AM
+    lunch:     { start: 10, end: 16 }, // 10 AM - 4 PM
+    dinner:    { start: 16, end: 24 }  // 4 PM - 12 AM
+  };
+  const localHour = () => { const d=new Date(); return d.getHours()+d.getMinutes()/60; };
+  const isOpen = (part,h=localHour()) =>
+    !['breakfast','lunch','dinner'].includes(part) || (h>=DAYPARTS[part].start && h<DAYPARTS[part].end);
+  const currentDaypart = (h=localHour()) => (h<10?'breakfast':h<16?'lunch':'dinner');
+
+  function updateDaypartTabs(prefer){
+    const tabsWrap = document.getElementById('categoryTabs');
+    const now = localHour();
+    const buttons = [...tabsWrap.querySelectorAll('.site-tab')];
+
+    buttons.forEach(btn=>{
+      const cat = (btn.dataset.filter||'').toLowerCase();
+      const open = isOpen(cat, now);
+      const isDLB = (cat==='breakfast'||cat==='lunch'||cat==='dinner');
+      btn.classList.toggle('is-disabled', isDLB && !open);
+      btn.setAttribute('aria-disabled', String(isDLB && !open));
+    });
+
+    let target = prefer && isOpen(prefer, now) ? prefer : currentDaypart(now);
+    if (!isOpen(target, now)) target = 'drink';
+
+    const activeBtn = buttons.find(b=>b.dataset.filter===target) || buttons.find(b=>b.dataset.filter==='drink');
+    if (activeBtn) {
+      setActiveTab(activeBtn);
+      setTitleFor(target);
+    }
+    return target;
+  }
+
+  function setTitleFor(cat){
+    const el = document.getElementById('sectionTitle');
+    if (el) el.textContent = cat ? (cat[0].toUpperCase()+cat.slice(1)) : 'Menu';
+  }
+
+  /* ------------ cart badge ------------ */
+  function cartKey(mrn){ return `bb.cart.${mrn || 'nomrn'}`; }
+  function readCart(mrn){ try { return JSON.parse(sessionStorage.getItem(cartKey(mrn)) || '[]'); } catch { return []; } }
+  function refreshCartBadge(){
+    const badge = document.querySelector('.site-cart__badge');
+    if (badge) badge.textContent = String(readCart(MRN).length);
+  }
+  refreshCartBadge();
+  window.addEventListener('focus', refreshCartBadge);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshCartBadge(); });
+  window.addEventListener('pageshow', refreshCartBadge);
+
+  /* ------------ fetch helper ------------ */
+  async function getJSON(url, init){
+    const res = await fetch(url, { ...init, headers:{ 'Accept':'application/json', ...(init&&init.headers) }});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  /* ------------ UI helpers ------------ */
+  function setActiveTab(btn){
+    document.querySelectorAll('#categoryTabs .site-tab').forEach(b=>{
+      b.classList.remove('is-active'); b.removeAttribute('aria-current'); b.setAttribute('aria-selected','false');
+    });
+    btn.classList.add('is-active'); btn.setAttribute('aria-current','page'); btn.setAttribute('aria-selected','true');
+  }
+
+  const pick = (o, ks)=>{ for (const k of ks) if (o && o[k]!==undefined && o[k]!==null) return o[k]; };
+  const getName     = it => (pick(it,['name','Name','strItemName','itemName']) || '').trim();
+  const getCategory = it => (pick(it,['category','Category','strCategory','meal','Meal']) || '').toLowerCase();
+  const getCal      = it => pick(it,['calories','Calories','decCalories']);
+  const getNa       = it => pick(it,['sodiumMg','SodiumMg','decSodiumMG']);
+  const getPro      = it => pick(it,['proteinG','ProteinG','decProteinG']);
+  const getCarb     = it => pick(it,['carbsG','CarbsG','decCarbsG']);
+  const getFat      = it => pick(it,['fatG','FatG','decFatG']);
+  const isLow       = it => !!pick(it,['lowSodium','LowSodium','bitLowSodium']);
+  const getId       = it => pick(it,['id','ID','Id','itemId','ItemId','itemID','ItemID','intMenuItemID','intItemID','intItemId']);
+  const safe = v => (v ?? '') === '' ? '' : v;
+
+  function imgSrc(it){
+    const p = (pick(it,['imagePath','ImagePath','strImagePath']) || '/food-images/default.jpg');
+    return p.startsWith('http') ? p : `${BASE}${p.startsWith('/')?p:'/'+p}`;
+  }
+
+  /* ------------ rendering ------------ */
+  function renderCard(it, blocked){
+    const low = isLow(it);
+    const id  = getId(it);
+    return `
+      <article class="card ${blocked ? 'blocked' : ''}" role="button" tabindex="0"
+               data-id="${id ?? ''}" data-cat="${getCategory(it)}" data-name="${getName(it).toLowerCase()}">
+        <div class="card-img">
+          <img src="${imgSrc(it)}" alt="">
+          ${low ? `<div class="card-badge">Low sodium</div>` : ``}
+        </div>
+        <div class="card-body">
+          <div class="card-headline">
+            <div class="item-name">${getName(it)}</div>
+            <div class="item-cat">${(getCategory(it)||'').replace(/^\w/,c=>c.toUpperCase())}</div>
+          </div>
+          <div class="nutrition-row">
+            <div class="nut"><span class="nut-label">Calories</span><span>${safe(getCal(it))}</span></div>
+            <div class="nut"><span class="nut-label">Sodium (mg)</span><span>${safe(getNa(it))}</span></div>
+            <div class="nut"><span class="nut-label">Protein (g)</span><span>${safe(getPro(it))}</span></div>
+            <div class="nut"><span class="nut-label">Carbs (g)</span><span>${safe(getCarb(it))}</span></div>
+            <div class="nut"><span class="nut-label">Fat (g)</span><span>${safe(getFat(it))}</span></div>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  const grid   = document.getElementById('menuGrid');
+  const errBox = document.getElementById('menuError');
+  const note   = document.getElementById('hiddenNote');
+
+  function renderGrid(list, hiddenCount=0, hide=false){
+    if (!list.length){
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = 'No menu items available.';
+      note.classList.add('is-hidden');
+      return;
+    }
+    errBox.hidden = true;
+
+    const rows = list.map(it => ({ it, blocked: !!(it.hasConflict || it.HasConflict) }));
+    const show = hide ? rows.filter(r => !r.blocked) : rows;
+
+    grid.innerHTML = show.map(r => renderCard(r.it, r.blocked && !hide)).join('');
+
+    if (hiddenCount){
+      note.textContent = `${hiddenCount} item${hiddenCount===1?'':'s'} ${hide?'hidden':'flagged'} due to allergies.`;
+      note.classList.remove('is-hidden');
+    }else{
+      note.classList.add('is-hidden');
+    }
+  }
+
+  /* ------------ data + filters ------------ */
+  let allItems = [];
+
+  function applyFilters({cat='', search=''}={}){
+    const catLc = (cat||'').toLowerCase();
+    const q = (search||'').trim().toLowerCase();
+    let items = allItems.slice();
+
+    if (catLc) items = items.filter(it => getCategory(it) === catLc);
+    if (q){
+      items = items.filter(it=>{
+        const name = getName(it).toLowerCase();
+        const c    = getCategory(it);
+        const allg = String(it.allergenNames || it.AllergenNames || '').toLowerCase();
+        return name.includes(q) || c.includes(q) || allg.includes(q);
+      });
+    }
+
+    // conflicts to bottom
+    items.sort((a,b)=> (+!!(a.hasConflict||a.HasConflict)) - (+!!(b.hasConflict||b.HasConflict)));
+
+    const hidden = items.filter(it => !!(it.hasConflict || it.HasConflict)).length;
+    renderGrid(items, hidden, false); // grey-out (do not hide)
+  }
+
+  /* ------------ events ------------ */
+  document.getElementById('categoryTabs')?.addEventListener('click', e=>{
+    const btn = e.target.closest('.site-tab');
+    if (!btn || btn.classList.contains('is-disabled')) return;
+    const cat = (btn.dataset.filter||'').toLowerCase();
+    setActiveTab(btn);
+    setTitleFor(cat);
+    applyFilters({ cat, search: document.getElementById('searchBox')?.value || '' });
+  });
+
+  document.getElementById('searchBox')?.addEventListener('input', e=>{
+    const active = document.querySelector('#categoryTabs .site-tab.is-active');
+    const cat = active ? (active.dataset.filter||'').toLowerCase() : '';
+    applyFilters({ cat, search: e.target.value || '' });
+  });
+
+  document.getElementById('menuGrid')?.addEventListener('click', e=>{
+    const card = e.target.closest('.card');
+    if (!card || card.classList.contains('blocked')) return;
+    const id = card.dataset.id; if (!id) return;
+    location.href = withParams('itemcustomization.html', { id, mrn: MRN });
+  });
+
+  /* ------------ load + init ------------ */
+  async function loadAllergies(){
+    const banner = document.getElementById('allergyBanner');
+    const chips  = document.getElementById('allergenChips');
+    banner.classList.add('muted');
+    try{
+      const arr = await getJSON(api(`/api/profile/allergies?mrn=${encodeURIComponent(MRN)}`));
+      const names = (arr||[]).map(x => (x.Name||x.name||x.strAllergen||'').toString()).filter(Boolean);
+      chips.innerHTML = names.length
+        ? names.map(n=>`<span class="chip allergen">${n}</span>`).join('')
+        : '<span class="chip allergen" style="opacity:.6">None</span>';
+    }catch{
+      chips.innerHTML = '<span class="chip allergen" style="opacity:.6">Unavailable</span>';
+    }
+  }
+
+  async function loadMenu(){
+    try{
+      const data = await getJSON(api(`/api/menu?mrn=${encodeURIComponent(MRN)}`));
+      allItems = Array.isArray(data) ? data : [];
+    }catch{
+      allItems = [];
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = 'Failed to load menu.';
+    }
+  }
+
+  async function boot(){
+    await loadAllergies();
+    await loadMenu();
+
+    const initial = updateDaypartTabs();
+    applyFilters({ cat: initial, search: '' });
+
+    setInterval(()=>{
+      const activeBtn = document.querySelector('#categoryTabs .site-tab.is-active');
+      const current = activeBtn ? (activeBtn.dataset.filter||'').toLowerCase() : null;
+      const next = updateDaypartTabs(current);
+      if (!activeBtn || activeBtn.classList.contains('is-disabled')){
+        applyFilters({ cat: next, search: document.getElementById('searchBox')?.value || '' });
+      }
+    }, 60000);
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

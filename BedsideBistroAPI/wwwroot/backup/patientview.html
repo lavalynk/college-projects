@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BedsideBistro — Menu</title>
+  <link rel="stylesheet" href="global.css" />
+</head>
+<body class="patientview">
+
+  <!-- Header -->
+<header class="site-header">
+  <div class="container site-header__bar" role="navigation" aria-label="Top">
+    <a class="site-brand" href="index.html">
+      <img src="BedsideBistro_Small.svg" alt="BedsideBistro" class="site-brand__img" />
+      <span class="site-brand__text">BedsideBistro</span>
+    </a>
+
+    <label class="site-search" aria-label="Search menu">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input id="searchBox" type="search" name="q" placeholder="Search meals, ingredients, allergens…" />
+    </label>
+
+    <!-- Cart button (anchor, accessible, badge supported) -->
+    <a class="site-cart" id="cartLink" href="ordersummary.html" aria-label="Open cart" data-count="0">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path fill="currentColor" d="M7 18a2 2 0 1 0 2 2 2 2 0 0 0-2-2zm10 0a2 2 0 1 0 2 2 2 2 0 0 0-2-2zM7.16 6l.84 2h9.42a1 1 0 0 1 .96 1.28l-1.6 5.6A2 2 0 0 1 14.86 16H9.14a2 2 0 0 1-1.92-1.12L5.1 6.76A1 1 0 0 0 4.16 6H3V4h2.34a2 2 0 0 1 1.82 1.2z"/>
+      </svg>
+      <span class="sr-only">Cart</span>
+      <span class="site-cart__badge" aria-hidden="true">0</span>
+    </a>
+
+    <!-- Profile button (anchor) -->
+    <a class="site-profile" id="profileLink" href="userprofile.html" aria-label="Open profile menu">
+      <div class="site-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/>
+        </svg>
+      </div>
+      <span class="sr-only">Profile</span>
+    </a>
+  </div>
+</header>
+
+
+    <!-- tabs -->
+    <div class="container" role="tablist" aria-label="Menu categories">
+      <div class="tabs" id="categoryTabs">
+        <button class="tab is-active" role="tab" data-filter="" aria-current="page">All</button>
+        <button class="tab" role="tab" data-filter="breakfast">Breakfast</button>
+        <button class="tab" role="tab" data-filter="lunch">Lunch</button>
+        <button class="tab" role="tab" data-filter="dinner">Dinner</button>
+        <button class="tab" role="tab" data-filter="drink">Drink</button>
+        <button class="tab" role="tab" data-filter="side">Side</button>
+        <button class="tab" role="tab" data-filter="dessert">Dessert</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="content" class="container" aria-live="polite">
+    <div class="section-head">
+      <h2 id="sectionTitle">Today’s picks</h2>
+    </div>
+
+    <section class="grid" id="menuGrid" aria-label="Recommended menu items"></section>
+
+    <div id="menuError" class="alert" role="alert" hidden>
+      Unable to load the menu right now. Please try again later.
+    </div>
+  </main>
+
+  <footer>
+    Prototype UI · BedsideBistro
+  </footer>
+
+<script>
+(function(){
+
+  // same trick: if you're double-clicking the file from disk in Chrome,
+  // we use the hosted API so CORS doesn't freak out
+  const USING_FILE = location.protocol === 'file:';
+  const BASE = USING_FILE ? 'https://bedsidebistroapi.winhost.com' : '';
+  const MENU_URL = BASE + '/api/menu';
+
+  // ----- fallback getters from your table version -----
+  const pick = (o, keys) => {
+    for (const k of keys) {
+      if (o[k] !== undefined && o[k] !== null) return o[k];
+    }
+    return undefined;
+  };
+
+  // --- MRN helpers ---
+const params = new URLSearchParams(location.search);
+const MRN = params.get('mrn') || '';
+
+function withParams(baseUrl, extra = {}) {
+  const url = new URL(baseUrl, location.origin);
+  const p = new URLSearchParams(url.search);
+  // keep any existing params on baseUrl, then add new ones
+  Object.entries(extra).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') p.set(k, v);
+  });
+  url.search = p.toString();
+  // return relative if input was relative (keeps your routing tidy)
+  return baseUrl.startsWith('http') ? url.toString() : url.pathname + (url.search ? ('?' + p.toString()) : '');
+}
+
+// cart/profile should carry MRN if present
+const cartA = document.getElementById('cartLink');
+if (cartA) cartA.href = withParams(cartA.getAttribute('href') || 'ordersummary.html', { mrn: MRN });
+
+const profA = document.getElementById('profileLink');
+if (profA) profA.href = withParams(profA.getAttribute('href') || 'userprofile.html', { mrn: MRN });
+
+
+
+  const getName     = it => pick(it, ['name','Name','strItemName','itemName']) ?? '(unnamed)';
+  const getCategory = it => pick(it, ['category','Category','strCategory','meal','Meal']) ?? '';
+  const getCal      = it => pick(it, ['calories','Calories','decCalories']);
+  const getNa       = it => pick(it, ['sodiumMg','SodiumMg','decSodiumMG']);
+  const getPro      = it => pick(it, ['proteinG','ProteinG','decProteinG']);
+  const getCarb     = it => pick(it, ['carbsG','CarbsG','decCarbsG']);
+  const getFat      = it => pick(it, ['fatG','FatG','decFatG']);
+  const isLow       = it => !!pick(it, ['lowSodium','LowSodium','bitLowSodium']);
+  const getImgPath  = it => pick(it, ['imagePath','ImagePath','strImagePath']);
+  const getId      = it => pick(it, ['id','ID','Id','itemId','ItemId','itemID','ItemID','intItemID','intItemId']);
+
+
+  function imgSrc(item){
+    const p = getImgPath(item) || '/food-images/default.jpg';
+    if (p.startsWith('http')) return p;
+    return BASE + (p.startsWith('/') ? p : '/' + p);
+  }
+
+  const safe = v => (v ?? '') === '' ? '' : v;
+
+  // ----- render one card -----
+  function renderCard(it){
+  const low = isLow(it);
+  const itemId = getId(it);
+
+  // fallback safety: if no ID, we just won't navigate
+  const hasId = itemId !== undefined && itemId !== null && itemId !== '';
+
+  return `
+    <article
+      class="card"
+      role="button"
+      tabindex="0"
+      data-id="${hasId ? String(itemId) : ''}"
+      data-name="${getName(it).toLowerCase()}"
+      data-cat="${getCategory(it).toLowerCase()}"
+      aria-label="${getName(it)} — tap to customize"
+    >
+      <div class="card-img">
+        <img src="${imgSrc(it)}" alt="">
+        ${low ? `<div class="card-badge">Low sodium</div>` : ``}
+      </div>
+
+      <div class="card-body">
+        <div class="card-headline">
+          <div class="item-name">${getName(it)}</div>
+          <div class="item-cat">${getCategory(it)}</div>
+        </div>
+
+        <div class="nutrition-row">
+          <div class="nut">
+            <span class="nut-label">Calories</span>
+            <span>${safe(getCal(it))}</span>
+          </div>
+          <div class="nut">
+            <span class="nut-label">Na (mg)</span>
+            <span>${safe(getNa(it))}</span>
+          </div>
+          <div class="nut">
+            <span class="nut-label">Protein (g)</span>
+            <span>${safe(getPro(it))}</span>
+          </div>
+          <div class="nut">
+            <span class="nut-label">Carbs (g)</span>
+            <span>${safe(getCarb(it))}</span>
+          </div>
+          <div class="nut">
+            <span class="nut-label">Fat (g)</span>
+            <span>${safe(getFat(it))}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+
+  // ----- push cards into the grid -----
+  function renderGrid(list){
+    const grid = document.getElementById('menuGrid');
+    const errBox = document.getElementById('menuError');
+
+    if (!Array.isArray(list) || list.length === 0){
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = 'No menu items available.';
+      return;
+    }
+
+    errBox.hidden = true;
+    grid.innerHTML = list.map(renderCard).join('');
+  }
+
+  // ----- fetch wrapper w/ basic error surfacing -----
+  async function loadMenu(){
+    const grid = document.getElementById('menuGrid');
+    const errBox = document.getElementById('menuError');
+
+    // loading state
+    grid.innerHTML = '<div class="hint">Loading…</div>';
+    errBox.hidden = true;
+
+    let res;
+    let text;
+    try {
+      res = await fetch(MENU_URL, { headers: { 'Accept':'application/json' }});
+    } catch (e){
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = 'Network error (CORS or offline).';
+      console.warn('NETWORK ERROR', e);
+      return;
+    }
+
+    try { text = await res.text(); } catch { text = ''; }
+
+    if (!res.ok){
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = `Server error: HTTP ${res.status}`;
+      console.warn('BAD STATUS', res.status, text.slice(0,2000));
+      return;
+    }
+
+    let data;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      grid.innerHTML = '';
+      errBox.hidden = false;
+      errBox.textContent = 'Bad data from server (not JSON).';
+      console.warn('INVALID JSON', text.slice(0,2000));
+      return;
+    }
+
+    fullMenuList = Array.isArray(data) ? data : [];
+    renderGrid(fullMenuList);
+  }
+
+  // store full list so we can filter on search
+  let fullMenuList = [];
+
+  // ----- basic client-side search filter -----
+  function filterMenu(query){
+    query = query.trim().toLowerCase();
+    if (query === '') {
+      renderGrid(fullMenuList);
+      return;
+    }
+
+    const filtered = fullMenuList.filter(it => {
+      const name = getName(it).toLowerCase();
+      const cat  = getCategory(it).toLowerCase();
+      return (
+        name.includes(query) ||
+        cat.includes(query)
+      );
+    });
+
+    renderGrid(filtered);
+  }
+
+  // ----- tab handling -----
+  function setActiveTab(btn){
+    // visual active state
+    document.querySelectorAll('#categoryTabs .tab').forEach(tab => {
+      tab.classList.remove('is-active');
+      tab.removeAttribute('aria-current');
+    });
+
+    btn.classList.add('is-active');
+    btn.setAttribute('aria-current', 'page');
+  }
+
+  function handleTabClick(e){
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+
+    const catQuery = btn.getAttribute('data-filter') || '';
+
+
+    const titleEl = document.getElementById('sectionTitle');
+    if (titleEl){
+      titleEl.textContent = catQuery === '' 
+        ? "Today’s picks"
+        : catQuery.charAt(0).toUpperCase() + catQuery.slice(1);
+    }
+
+    
+    filterMenu(catQuery);
+
+    // toggle active styles + aria
+    setActiveTab(btn);
+  }
+
+  // wire tab clicks
+  const tabsWrapper = document.getElementById('categoryTabs');
+  if (tabsWrapper){
+    tabsWrapper.addEventListener('click', handleTabClick);
+  }
+
+  // wire search box live typing
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox){
+    searchBox.addEventListener('input', e => {
+      const q = e.target.value || '';
+      filterMenu(q);
+
+      // if user manually types, clear tab highlight (bc now it's custom search)
+      document.querySelectorAll('#categoryTabs .tab').forEach(tab => {
+        tab.classList.remove('is-active');
+        tab.removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // ----- card click -> go to itemcustomization.html?id=___
+const menuGrid = document.getElementById('menuGrid');
+
+if (menuGrid) {
+  // click with mouse / touch
+menuGrid.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const itemId = card.getAttribute('data-id');
+  if (!itemId) return;
+  const target = withParams('itemcustomization.html', { id: itemId, mrn: MRN });
+  window.location.href = target;
+});
+
+// press Enter/Space from keyboard
+menuGrid.addEventListener('keydown', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    const itemId = card.getAttribute('data-id');
+    if (!itemId) return;
+    const target = withParams('itemcustomization.html', { id: itemId, mrn: MRN });
+    window.location.href = target;
+  }
+});
+}
+
+
+  // first load
+  loadMenu();
+})();
+</script>
+
+</body>
+</html>

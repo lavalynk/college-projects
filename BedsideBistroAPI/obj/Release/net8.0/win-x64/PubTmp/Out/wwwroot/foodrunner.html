@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Food Runner</title>
+<style>
+  :root{
+    --bg:#f7faf9; --surface:#fff; --text:#1b1f1e; --muted:#6b7671;
+    --brand:#2f7d5f; --brand-600:#2a6f55; --brand-050:#e9f5f0;
+    --outline:#cfe5db; --tab:#e6ebe9; --shadow:0 6px 18px rgba(0,0,0,.08);
+    --ok:#2f7d5f; --warn:#b56a00; --alert:#b83b3b;
+    --radius:18px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    color:var(--text); line-height:1.45;
+    background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+  }
+  a{color:inherit;text-decoration:none}
+  .container{width:min(1280px,94vw);margin:0 auto}
+  .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  :focus-visible{outline:3px solid #8fd6b9;outline-offset:2px;border-radius:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(6px)}
+  .nav{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+  .brand-badge{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-600));color:#fff;font-weight:800;font-size:.9rem;box-shadow:var(--shadow)}
+  .search{display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:10px 12px;min-width:min(420px,50vw);box-shadow:var(--shadow)}
+  .search input{border:0;outline:0;width:100%;font:inherit;background:transparent}
+  .profile{margin-left:auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--outline);padding:6px 8px 6px 6px;border-radius:999px;box-shadow:var(--shadow)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e7f3ed,#d6efe5);display:grid;place-items:center;border:1px solid var(--outline)}
+
+  /* Layout */
+  .layout{display:grid;grid-template-columns:0.95fr 1.05fr;gap:18px;margin:10px 0 24px;}
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr} }
+
+  /* Panels */
+  .panel,.detail{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:14px 14px 18px}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 10px}
+  .section-head h2{margin:0;font-size:1.05rem}
+
+  /* Left list */
+  .list{display:grid;gap:12px}
+  .cell{
+    border:2px solid var(--outline);border-radius:16px;background:#fff;padding:10px;display:grid;gap:8px;cursor:pointer;
+    transition:border-color .2s, box-shadow .2s, background .2s;
+  }
+  .cell:hover{box-shadow:0 10px 22px rgba(0,0,0,.08)}
+  .cell.selected{outline:3px solid #8fd6b9}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .name{font-weight:800}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size:.95rem}
+  .pill{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd;color:#2b3a34}
+  .eta{font-size:.85rem;padding:6px 9px;border-radius:999px;border:1px solid var(--outline);background:#eaf2ef}
+  .eta.ok{border-color:#cfe5db;color:var(--ok)}
+  .eta.warn{border-color:#f0d9b3;color:var(--warn);background:#fff7e8}
+  .eta.late{border-color:#f0c1c1;color:var(--alert);background:#ffe9e9}
+  .badges{display:flex;gap:.4rem;flex-wrap:wrap}
+  .chip{font-size:.8rem;padding:6px 9px;border-radius:999px;border:1px dashed var(--outline);background:#fbfefd}
+  .chip.allergen{border-style:solid;border-color:#f0c1c1;background:#ffe9e9;color:#8b2323}
+
+  /* Right detail */
+  .cardish{border:1px solid var(--outline);border-radius:16px;padding:12px;background:#fff}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  .items{display:grid;gap:8px}
+  .muted{color:var(--muted)}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .btn{appearance:none;border:1px solid var(--outline);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-600));border-color:transparent;color:#fff}
+  .btn.danger{border-color:#e7b0b0;color:#8b2323}
+
+</style>
+</head>
+<body>
+<a class="sr-only" href="#content">Skip to content</a>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">BB</span>
+      <span>BedsideBistro — Runner</span>
+    </div>
+
+    <label class="search" aria-label="Search runner tickets">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" placeholder="Search by room, MRN, patient…" />
+    </label>
+
+    <button class="profile" aria-label="Runner profile">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z"/></svg>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main id="content" class="container">
+  <div class="layout">
+    <!-- LEFT: Orders list -->
+    <section class="panel">
+      <div class="pad">
+        <div class="section-head">
+          <h2>Runner queue</h2>
+          <div class="muted">4 active</div>
+        </div>
+        <div class="list" role="list">
+          <article class="cell" role="listitem">
+            <div class="meta"><span class="name">Josie Wooldridge</span><span class="mono">MRN 004219</span><span class="pill">Room 4B-213</span><span class="eta ok">Waiting</span></div>
+            <div class="muted mono">2 items — Grilled Chicken Salad + cucumber water</div>
+            <div class="badges"><span class="chip allergen">Peanut</span><span class="chip">Insulin window</span><span class="chip">Keep cool</span></div>
+          </article>
+          <article class="cell" role="listitem">
+            <div class="meta"><span class="name">Maya Singh</span><span class="mono">MRN 003108</span><span class="pill">Room 3A-118</span><span class="eta ok">Waiting</span></div>
+            <div class="muted mono">2 items — Turkey sandwich + side salad</div>
+            <div class="badges"><span class="chip allergen">Wheat</span><span class="chip">Dietary timing</span><span class="chip">Keep hot</span></div>
+          </article>
+          <article class="cell" role="listitem">
+            <div class="meta"><span class="name">Linh Nguyen</span><span class="mono">MRN 002808</span><span class="pill">Room 4B-210</span><span class="eta warn">On way · 6m</span></div>
+            <div class="muted mono">1 item — Tomato Basil Soup</div>
+            <div class="badges"><span class="chip allergen">Milk</span><span class="chip">Keep hot</span></div>
+          </article>
+          <article class="cell" role="listitem">
+            <div class="meta"><span class="name">Kai Ramirez</span><span class="mono">MRN 004301</span><span class="pill">Room 4B-214</span><span class="eta ok">Waiting</span></div>
+            <div class="muted mono">1 item — Roasted Veggie Bowl</div>
+            <div class="badges"><span class="chip allergen">Sesame</span><span class="chip">Dietary timing</span><span class="chip">Keep hot</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Detail -->
+    <aside class="detail">
+      <div class="pad">
+        <div class="section-head"><h2>Order summary</h2><span class="muted mono">BB-850</span></div>
+        <div class="cardish">
+          <div class="kv"><strong>Josie Wooldridge • MRN 004219</strong><span class="pill">Room 4B-213</span></div>
+          <div class="badges" style="margin-top:6px">
+            <span class="chip allergen">Peanut</span>
+            <span class="chip">Insulin window</span>
+            <span class="chip">Keep cool</span>
+          </div>
+          <div class="muted" style="margin-top:6px">2 items — Grilled Chicken Salad + cucumber water</div>
+
+          <div class="cardish" style="margin-top:10px">
+            <strong>Contact & timing</strong>
+            <div class="kv"><span class="muted">Floor desk</span><span class="mono">x4421</span></div>
+            <div class="kv"><span class="muted">Claimed</span><span class="mono">—</span></div>
+            <div class="kv"><span class="muted">SLA</span><span class="eta ok">Waiting for pickup</span></div>
+          </div>
+
+          <div class="kv" style="margin-top:10px"><span class="muted">Notes</span><span class="mono">Dressing on the side</span></div>
+        </div>
+
+        <div class="cta" style="margin-top:10px">
+          <button class="btn primary">Claim</button>
+          <button class="btn">Delivery issue…</button>
+        </div>
+
+        <div class="cardish" style="margin-top:10px">
+          <strong>Route order</strong>
+          <div class="kv"><span class="muted">Position</span><span class="mono">1</span></div>
+          <div class="cta" style="justify-content:flex-start">
+            <button class="btn">↑ Earlier</button>
+            <button class="btn">↓ Later</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+</body>
+</html>

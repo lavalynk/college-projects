@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BedsideBistro — Tab Test</title>
+
+<style>
+  /* Basic style reset */
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 20px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .tab {
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    background: #fff;
+  }
+
+  .tab[aria-selected="true"] {
+    background: #d9f2e6;
+    border-color: #85c7a7;
+  }
+
+  .list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .cell {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cell img {
+    width: 50px;   /* 👈 very small thumbnail */
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .name {
+    font-weight: bold;
+  }
+
+  .pill {
+    background: #f0f5f3;
+    border: 1px dashed #ccc;
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    width: fit-content;
+    margin-top: 2px;
+  }
+</style>
+</head>
+
+<body>
+  <section class="panel">
+    <div class="pad">
+      <div class="section-head">
+        <h2>Menus</h2>
+        <div class="hint">Breakfast · Lunch · Dinner</div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Menu types">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="tab-breakfast" id="btn-breakfast">Breakfast</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="tab-lunch" id="btn-lunch">Lunch</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="tab-dinner" id="btn-dinner">Dinner</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="tab-drink" id="btn-drink">Drinks</button>
+      </div>
+
+      <div id="tab-breakfast" class="list" role="tabpanel" aria-labelledby="btn-breakfast"></div>
+      <div id="tab-lunch" class="list" role="tabpanel" aria-labelledby="btn-lunch" hidden></div>
+      <div id="tab-dinner" class="list" role="tabpanel" aria-labelledby="btn-dinner" hidden></div>
+      <div id="tab-drink" class="list" role="tabpanel" aria-labelledby="btn-drink" hidden></div>
+    </div>
+  </section>
+
+  <script>
+  const menuUrl = 'http://bedsidebistro.com/api/menu';
+
+  async function loadMenu(category = null) {
+    try {
+      const response = await fetch(menuUrl);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const menuItems = await response.json();
+
+      // Clear all panels before reloading
+      document.querySelectorAll('.list').forEach(list => list.innerHTML = '');
+
+      // Filter if category specified
+      const filtered = category
+        ? menuItems.filter(item => item.category?.toLowerCase() === category)
+        : menuItems;
+
+      filtered.forEach(item => {
+        let panelId = '';
+        switch (item.category?.toLowerCase()) {
+          case 'breakfast': panelId = 'tab-breakfast'; break;
+          case 'lunch': panelId = 'tab-lunch'; break;
+          case 'dinner': panelId = 'tab-dinner'; break;
+          case 'drink': panelId = 'tab-drink'; break;
+          default:
+            console.warn(`Unknown category: ${item.category}`);
+            return;
+        }
+
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+
+        const el = document.createElement('article');
+        el.className = 'cell';
+        el.innerHTML = `
+          ${item.imagePath ? `<img src="${item.imagePath}" alt="${item.name}">` : ''}
+          <div class="meta">
+            <span class="name">${item.name}</span>
+            <span class="pill">${item.category}</span>
+            <span class="muted">${item.calories} cal</span>
+          </div>
+        `;
+        panel.appendChild(el);
+      });
+    } catch (error) {
+      console.error("Failed to fetch menu:", error);
+    }
+  }
+
+  // --- Tabs ---
+  const tabs = [
+    { btn: '#btn-breakfast', panel: '#tab-breakfast', category: 'breakfast' },
+    { btn: '#btn-lunch', panel: '#tab-lunch', category: 'lunch' },
+    { btn: '#btn-dinner', panel: '#tab-dinner', category: 'dinner' },
+    { btn: '#btn-drink', panel: '#tab-drink', category: 'drink' }
+  ];
+
+  function activateTab(targetBtn) {
+    tabs.forEach(({ btn, panel }) => {
+      const button = document.querySelector(btn);
+      const tabPanel = document.querySelector(panel);
+      const active = btn === targetBtn;
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      tabPanel.hidden = !active;
+    });
+  }
+
+  tabs.forEach(({ btn, category }) => {
+    document.querySelector(btn).addEventListener('click', async () => {
+      activateTab(btn);
+      await loadMenu(category); // 👈 reload menu each time tab clicked
+    });
+  });
+
+  // Initial load (default: breakfast)
+  loadMenu('breakfast').then(() => activateTab('#btn-breakfast'));
+</script>
+
+</body>
+</html>

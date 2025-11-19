@@ -1,0 +1,815 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BedsideBistro — Food Runner</title>
+    <style>
+        :root {
+            --bg: #f7faf9;
+            --surface: #fff;
+            --text: #1b1f1e;
+            --muted: #6b7671;
+            --brand: #2f7d5f;
+            --brand-600: #2a6f55;
+            --brand-050: #e9f5f0;
+            --outline: #cfe5db;
+            --tab: #e6ebe9;
+            --shadow: 0 6px 18px rgba(0,0,0,.08);
+            --ok: #2f7d5f;
+            --warn: #b56a00;
+            --alert: #b83b3b;
+            --radius: 18px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+            color: var(--text);
+            line-height: 1.45;
+            background: radial-gradient(1200px 600px at 80% -10%, var(--brand-050), transparent 60%), var(--bg);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .container {
+            width: min(1280px,94vw);
+            margin: 0 auto;
+        }
+
+        .sr-only {
+            position: absolute !important;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(1px,1px,1px,1px);
+            white-space: nowrap;
+            border: 0;
+            padding: 0;
+            margin: -1px;
+        }
+
+        :focus-visible {
+            outline: 3px solid #8fd6b9;
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: saturate(1.1) blur(6px);
+        }
+
+        .nav {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 14px 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            font-weight: 800;
+        }
+
+        .brand-badge {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+            background: linear-gradient(135deg,var(--brand),var(--brand-600));
+            color: #fff;
+            font-weight: 800;
+            font-size: .9rem;
+            box-shadow: var(--shadow);
+        }
+
+        .search {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: 999px;
+            padding: 10px 12px;
+            min-width: min(420px,50vw);
+            box-shadow: var(--shadow);
+        }
+
+            .search input {
+                border: 0;
+                outline: 0;
+                width: 100%;
+                font: inherit;
+                background: transparent;
+            }
+
+        .profile {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            padding: 6px 8px 6px 6px;
+            border-radius: 999px;
+            box-shadow: var(--shadow);
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#e7f3ed,#d6efe5);
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--outline);
+        }
+
+        /* Layout */
+        .layout {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 18px;
+            margin: 10px 0 24px;
+        }
+
+        @media (max-width:1000px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel,
+        .detail {
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .pad {
+            padding: 14px 14px 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 4px 0 10px;
+        }
+
+            .section-head h2 {
+                margin: 0;
+                font-size: 1.05rem;
+            }
+
+        /* Left list */
+        .list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .cell {
+            border: 2px solid var(--outline);
+            border-radius: 16px;
+            background: #fff;
+            padding: 10px;
+            display: grid;
+            gap: 8px;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+
+            .cell:hover {
+                box-shadow: 0 10px 22px rgba(0,0,0,.08);
+            }
+
+            .cell.selected {
+                outline: 3px solid #8fd6b9;
+            }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .name {
+            font-weight: 800;
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: .95rem;
+        }
+
+        .pill {
+            font-size: .85rem;
+            padding: 6px 9px;
+            border-radius: 999px;
+            border: 1px dashed var(--outline);
+            background: #fbfefd;
+            color: #2b3a34;
+        }
+
+        .eta {
+            font-size: .85rem;
+            padding: 6px 9px;
+            border-radius: 999px;
+            border: 1px solid var(--outline);
+            background: #eaf2ef;
+        }
+
+            .eta.ok {
+                border-color: #cfe5db;
+                color: var(--ok);
+            }
+
+            .eta.warn {
+                border-color: #f0d9b3;
+                color: var(--warn);
+                background: #fff7e8;
+            }
+
+            .eta.late {
+                border-color: #f0c1c1;
+                color: var(--alert);
+                background: #ffe9e9;
+            }
+
+        .badges {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: .8rem;
+            padding: 6px 9px;
+            border-radius: 999px;
+            border: 1px dashed var(--outline);
+            background: #fbfefd;
+        }
+
+            .chip.allergen {
+                border-style: solid;
+                border-color: #f0c1c1;
+                background: #ffe9e9;
+                color: #8b2323;
+            }
+
+        /* Right detail */
+        .cardish {
+            border: 1px solid var(--outline);
+            border-radius: 16px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .items {
+            display: grid;
+            gap: 8px;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .cta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            appearance: none;
+            border: 1px solid var(--outline);
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+            .btn.primary {
+                background: linear-gradient(135deg,var(--brand),var(--brand-600));
+                border-color: transparent;
+                color: #fff;
+            }
+
+            .btn.danger {
+                border-color: #e7b0b0;
+                color: #8b2323;
+            }
+
+        /* Runner stepper styling (like kitchen view) */
+        .steps {
+            position: relative;
+            padding: 8px 4px 0;
+        }
+
+            .steps .track,
+            .steps .row {
+                position: relative;
+            }
+
+            .steps .track {
+                position: absolute;
+                left: 18px;
+                right: 18px;
+                top: 14px;
+                height: 4px;
+                background: #e8efe9;
+                border-radius: 999px;
+            }
+
+            .steps .row {
+                display: flex;
+                justify-content: space-between;
+            }
+
+        .step {
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            font-size: .8rem;
+            color: var(--muted);
+        }
+
+            .step .dot {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                display: grid;
+                place-items: center;
+                background: #fff;
+                border: 2px solid #cfe5db;
+                color: #2f7d5f;
+                font-size: .75rem;
+                font-weight: 800;
+            }
+
+            .step.done .dot,
+            .step.active .dot {
+                background: linear-gradient(135deg,var(--brand),var(--brand-600));
+                border-color: transparent;
+                color: #fff;
+            }
+
+            .step.done .label,
+            .step.active .label {
+                color: var(--brand);
+            }
+    </style>
+</head>
+<body>
+    <a class="sr-only" href="#content">Skip to content</a>
+
+    <header>
+        <div class="container nav">
+            <div class="brand">
+                <span class="brand-badge" aria-hidden="true">BB</span>
+                <span>BedsideBistro — Runner</span>
+            </div>
+
+            <label class="search" aria-label="Search runner tickets">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20l-6-6zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                </svg>
+                <input type="search" placeholder="Search by room, MRN, patient…" />
+            </label>
+
+            <button class="profile" aria-label="Runner profile">
+                <div class="avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5z" />
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <main id="content" class="container">
+        <div class="layout">
+            <!-- LEFT: Orders list -->
+            <section class="panel">
+                <div class="pad">
+                    <div class="section-head">
+                        <h2>Runner queue</h2>
+                        <div class="muted">0 active</div>
+                    </div>
+                    <div class="list" role="list">
+                        <p class="muted mono">Loading runner queue…</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: Order summary -->
+            <aside class="detail">
+                <div class="pad">
+                    <div class="section-head">
+                        <h2>Order summary</h2>
+                    </div>
+
+                    <div class="cardish" id="summaryCard">
+                        <div class="kv">
+                            <strong id="pTitle">—</strong>
+                            <span class="pill" id="pRoom">Room —</span>
+                        </div>
+
+                        <!-- Stepper like kitchen view -->
+                        <div class="steps" style="margin-top:10px">
+                            <div class="track" id="track"></div>
+                            <div class="row" id="stepsRow"></div>
+                        </div>
+
+                        <!-- Items -->
+                        <div class="items" id="items" style="margin-top:10px; gap:8px;"></div>
+
+                        <!-- Notes -->
+                        <div class="kv" style="margin-top:10px">
+                            <span class="muted">Notes</span>
+                            <span id="noteLine" class="mono">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions (only Mark delivered button goes here) -->
+                    <div class="cta" id="actions" style="margin-top:10px"></div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        // ============= Runner – API wiring =============
+
+        const urlParams = new URLSearchParams(location.search);
+        const API_BASE = urlParams.get("api") || "";
+        const api = (p) => API_BASE + p;
+
+        const API = {
+            list: api("/api/orders"),
+            show: (id) => api(`/api/orders/${id}`),
+            statuses: api("/api/orderstatus"),
+            setStatus: (id) => api(`/api/orders/${id}/status`)
+        };
+
+        let orders = [];
+        let selectedId = null;
+        let orderDetail = null;
+        let STATUS_MAP = [];
+
+        const $ = (s) => document.querySelector(s);
+        const pick = (o, ...keys) => {
+            for (const k of keys) {
+                if (o && o[k] !== undefined && o[k] !== null) return o[k];
+            }
+            return undefined;
+        };
+
+        function safeText(v) {
+            return v === null || v === undefined ? "—" : String(v);
+        }
+
+        function safeTime(v) {
+            if (!v) return "—";
+            const d = new Date(v);
+            return isNaN(d.getTime())
+                ? "—"
+                : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        function stepIndex(status) {
+            switch ((status || "").toLowerCase()) {
+                case "placed": return 0;
+                case "in kitchen": return 1;
+                case "ready": return 2;
+                case "delivered": return 3;
+                default: return 0;
+            }
+        }
+
+        async function apiGet(url) {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(await r.text());
+            return r.json();
+        }
+
+        async function apiPut(url, body) {
+            const r = await fetch(url, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            if (!r.ok && r.status !== 204) throw new Error(await r.text());
+            return r.status === 204 ? null : await r.json();
+        }
+
+        function normalizeOrderRow(r) {
+            return {
+                OrderID: pick(r, "OrderID", "orderID", "orderId", "id"),
+                PatientName: pick(r, "PatientName", "patientName", "patient"),
+                RoomNumber: pick(r, "RoomNumber", "roomNumber", "room"),
+                MealPeriod: pick(r, "MealPeriod", "mealPeriod", "meal"),
+                Status: pick(r, "Status", "status", "OrderStatus", "orderStatus"),
+                PlacedOn: pick(r, "PlacedOn", "placedOn", "placed"),
+                MRN: pick(r, "MRN", "mrn"),
+                Notes: pick(r, "Notes", "notes")
+            };
+        }
+
+        function normalizeHeader(h) {
+            return {
+                OrderID: pick(h, "OrderID", "orderID", "orderId", "id"),
+                MRN: pick(h, "MRN", "mrn"),
+                PatientName: pick(h, "PatientName", "patientName", "patient"),
+                RoomNumber: pick(h, "RoomNumber", "roomNumber", "room"),
+                MealPeriod: pick(h, "MealPeriod", "mealPeriod", "meal"),
+                Status: pick(h, "Status", "status", "OrderStatus", "orderStatus"),
+                PlacedOn: pick(h, "PlacedOn", "placedOn"),
+                RequestedFor: pick(h, "RequestedFor", "requestedFor"),
+                DeliveredOn: pick(h, "DeliveredOn", "deliveredOn"),
+                Notes: pick(h, "Notes", "notes")
+            };
+        }
+
+        function normalizeItem(it) {
+            return {
+                OrderItemID: pick(it, "OrderItemID", "orderItemID", "orderItemId", "intOrderItemID"),
+                MenuItemID: pick(it, "MenuItemID", "menuItemID", "menuItemId", "intMenuItemID"),
+                ItemName: pick(it, "ItemName", "itemName", "strItemName"),
+                Qty: pick(it, "Qty", "qty", "Quantity", "quantity", "intQty") ?? 1,
+                SpecialInstr: pick(it, "SpecialInstr", "specialInstr", "strSpecialInstr")
+            };
+        }
+
+        // LEFT LIST
+        const listEl = document.querySelector(".panel .list[role='list']");
+        const queueLabelEl = document.querySelector(".panel .section-head .muted");
+
+        function renderList() {
+            if (!listEl) return;
+            listEl.innerHTML = "";
+
+            if (!orders.length) {
+                listEl.innerHTML = `<p class="muted mono">No active orders found for runners.</p>`;
+                if (queueLabelEl) queueLabelEl.textContent = "0 active";
+                orderDetail = null;
+                renderDetail();
+                return;
+            }
+
+            orders.forEach(o => {
+                const cell = document.createElement("article");
+                cell.className = "cell";
+                cell.setAttribute("role", "listitem");
+                cell.dataset.id = o.OrderID;
+
+                cell.innerHTML = `
+              <div class="meta">
+                <span class="name">${safeText(o.PatientName)}</span>
+                <span class="mono">MRN ${safeText(o.MRN)}</span>
+                <span class="pill">Room ${safeText(o.RoomNumber)}</span>
+              </div>
+              <div class="muted mono">
+                ${safeText(o.MealPeriod) || "—"} • Placed ${safeTime(o.PlacedOn)}
+              </div>
+            `;
+
+                cell.addEventListener("click", () => selectOrder(o.OrderID));
+                if (Number(o.OrderID) === Number(selectedId)) {
+                    cell.classList.add("selected");
+                }
+                listEl.appendChild(cell);
+            });
+
+            if (queueLabelEl) queueLabelEl.textContent = `${orders.length} active`;
+        }
+
+        // RIGHT DETAIL
+        function renderStepper(status) {
+            const row = $("#stepsRow");
+            const track = $("#track");
+            if (!row || !track) return;
+
+            const labels = ["Placed", "In Kitchen", "Ready", "Delivered"];
+            const idx = stepIndex(status);
+
+            row.innerHTML = labels
+                .map((label, i) => {
+                    const cls = i < idx ? "step done" : (i === idx ? "step active" : "step");
+                    return `<div class="${cls}">
+                        <div class="dot">${i + 1}</div>
+                        <div class="label">${label}</div>
+                      </div>`;
+                })
+                .join("");
+
+            const pct = (idx / (labels.length - 1)) * 100;
+            track.style.width = `calc(${pct}% - 18px)`;
+        }
+
+        function renderDetail() {
+            const itemsEl = $("#items");
+            const actionsEl = $("#actions");
+            const pTitle = $("#pTitle");
+            const pRoom = $("#pRoom");
+            const noteLine = $("#noteLine");
+
+            if (!itemsEl || !actionsEl || !pTitle || !pRoom || !noteLine) return;
+
+            if (!orderDetail) {
+                pTitle.textContent = "—";
+                pRoom.textContent = "Room —";
+                noteLine.textContent = "—";
+                itemsEl.innerHTML = "";
+                actionsEl.innerHTML = "";
+                renderStepper(null);
+                return;
+            }
+
+            const header = orderDetail.header;
+            const items = orderDetail.items || [];
+
+            pTitle.textContent = `${safeText(header.PatientName)} • MRN ${safeText(header.MRN)}`;
+            pRoom.textContent = `Room ${safeText(header.RoomNumber)}`;
+            noteLine.textContent = header.Notes || "—";
+
+            itemsEl.innerHTML = "";
+            items.forEach(it => {
+                const div = document.createElement("div");
+                div.className = "cardish";
+                div.innerHTML = `
+              <div class="kv">
+                <strong>${safeText(it.ItemName)}</strong>
+                <span class="mono">x${it.Qty ?? 1}</span>
+              </div>
+              <div class="muted">${it.SpecialInstr ? it.SpecialInstr : "No modifications"}</div>
+            `;
+                itemsEl.appendChild(div);
+            });
+
+            renderStepper(header.Status);
+            renderActions(header.OrderID, header.Status);
+        }
+
+        function renderActions(orderId, status) {
+            const box = $("#actions");
+            box.innerHTML = "";
+
+            if ((status || "").toLowerCase() === "delivered") return;
+
+            const btn = document.createElement("button");
+            btn.className = "btn primary";
+            btn.textContent = "Mark delivered";
+            btn.addEventListener("click", () => markDelivered(orderId, btn));
+            box.appendChild(btn);
+        }
+
+        // SELECTION & API
+        async function selectOrder(id) {
+            selectedId = Number(id);
+
+            document.querySelectorAll(".cell").forEach(c =>
+                c.classList.toggle("selected", Number(c.dataset.id) === selectedId)
+            );
+
+            try {
+                const raw = await apiGet(API.show(selectedId));
+
+                let header, items;
+                if (Array.isArray(raw)) {
+                    header = raw[0] || {};
+                    items = Array.isArray(raw[1]) ? raw[1] : [];
+                } else {
+                    header = raw.header || raw.Header || raw;
+                    items = Array.isArray(raw.items || raw.Items)
+                        ? (raw.items || raw.Items)
+                        : [];
+                }
+
+                orderDetail = {
+                    header: normalizeHeader(header),
+                    items: items.map(normalizeItem)
+                };
+                renderDetail();
+            } catch (e) {
+                console.error(e);
+                orderDetail = null;
+                renderDetail();
+                alert("Could not load this order from the API.");
+            }
+        }
+
+        async function loadStatuses() {
+            try {
+                STATUS_MAP = await apiGet(API.statuses);
+            } catch (e) {
+                console.error("Failed to load statuses", e);
+                STATUS_MAP = [];
+            }
+        }
+
+        async function markDelivered(orderId, btn) {
+            if (!orderId) return;
+            if (!STATUS_MAP.length) await loadStatuses();
+
+            const delivered = STATUS_MAP.find(s =>
+                String(s.Name || s.name || "").toLowerCase().includes("delivered")
+            );
+
+            if (!delivered) {
+                alert('Could not find a "Delivered" status in /api/orderstatus.');
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                await apiPut(API.setStatus(orderId), {
+                    StatusID: delivered.Id || delivered.id,
+                    UserID: 4,
+                    Comment: null
+                });
+
+                selectedId = null;
+                orderDetail = null;
+                await loadOrders();
+            } catch (e) {
+                console.error(e);
+                alert("There was a problem marking this order as delivered.");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const raw = await apiGet(API.list);
+                const all = Array.isArray(raw) ? raw.map(normalizeOrderRow) : [];
+
+                // hide delivered & cancelled from runner queue
+                orders = all.filter(o => {
+                    const s = (o.Status || "").toLowerCase();
+                    return s !== "delivered" && s !== "cancelled";
+                });
+
+                renderList();
+
+                if (!selectedId && orders.length) {
+                    await selectOrder(orders[0].OrderID);
+                } else if (selectedId && orders.some(o => o.OrderID === selectedId)) {
+                    await selectOrder(selectedId);
+                } else {
+                    orderDetail = null;
+                    renderDetail();
+                }
+            } catch (e) {
+                console.error(e);
+                if (queueLabelEl) queueLabelEl.textContent = "Error loading";
+                if (listEl) {
+                    listEl.innerHTML = `
+                <p class="muted mono">
+                  There was a problem loading the runner queue from the API.
+                </p>
+              `;
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadStatuses();
+            await loadOrders();
+        });
+    </script>
+</body>
+</html>
